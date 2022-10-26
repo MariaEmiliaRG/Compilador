@@ -1,0 +1,31 @@
+Identificadores 
+
+\$[A-Za-z]+
+
+Enteros
+
+0|([1-9][0-9]*)|([oO][1-7][0-7]+)
+
+Reales
+
+([1-9]*|0?)\.[0-9]+
+
+Constantes cadenas 
+
+("[^"'\n\r]+")|("'")|('[^'\n\r]')
+
+Símbolos especiales
+
+[\[\]\(\)\{\},;:]
+
+Operadores aritméticos
+
+[-\+\*\\\^/%]
+
+Operador relacional
+
+[<>=!]=|[<>]
+
+Operador de asignación
+
+=
