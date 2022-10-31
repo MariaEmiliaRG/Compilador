@@ -7,16 +7,32 @@
 */
 #include <stdio.h>
 #include <stdlib.h>
+#include "list.h"
 
 //Apuntador al archivo donde se almacenarán todos los errores que encuentre el compilador. 
 FILE *errors; 
 
+struct nodeFloat headFloat, tailFloat; 
+
+void newFloat(char *text);
 void sendError(int type, FILE *file, char *text);
 %}
 
-%%
+floatn ([1-9]*|0?)\.[0-9]+
+others [^ \n]
 
 %%
+
+{floatn}    {newFloat(yytext);}
+{others}    {sendError(2, errors, yytext);}
+
+%%
+
+void newFloat(char *text){
+  addFloatElement(atof(text), &tailFloat);
+  //createToken()
+  return; 
+}
 
 void sendError(int type, FILE *file, char *text){
   switch(type){
@@ -40,6 +56,9 @@ int main(int argn, char* arg[]){
   } else {
     yyin = fopen(arg[1], "r"); 
     if (yyin != NULL){
+
+      createFloatList(0, &headFloat, &tailFloat);
+
       yylex();
       fclose(errors);
     } else {
