@@ -11,27 +11,32 @@
 #include "list.h"
 
 //Apuntador al archivo donde se almacenarán todos los errores que encuentre el compilador. 
-FILE *errors; 
+FILE *errorsFile; 
 
 struct nodeFloat headFloat, tailFloat; 
+int line = 1; 
+int error = 0; 
 
 void newFloat(char *text);
 void newInteger(char *text);
 void newKeyWord(char *text);
-void sendError(int type, FILE *file, char *text);
+void sendError(char *text);
+void checkError();
 %}
 
 keyWord    alternative|big|evaluate|instead|large|loop|make|number|other|real|repeat|select|small|step|stop|symbol|throw
 floatn     ([1-9]*|0?)\.[0-9]+
 integern   0|([1-9][0-9]*)|([Oo][1-7][0-7]*)
 others     [^ \n]
+nextLine   \n
 
 %%
 
-{keyWord}   {newKeyWord(yytext);}
-{floatn}    {newFloat(yytext);}
-{integern}  {newInteger(yytext);}
-{others}    {sendError(2, errors, yytext);}
+{keyWord}   {checkError(); newKeyWord(yytext);}
+{floatn}    {checkError(); newFloat(yytext);}
+{integern}  {checkError(); newInteger(yytext);}
+{others}    {sendError(yytext);}
+{nextLine}  {checkError(); line ++;}
 
 %%
 
@@ -79,25 +84,30 @@ void newKeyWord(char *text){
   //createToken(,mid);
 }
 
-void sendError(int type, FILE *file, char *text){
-  switch(type){
-    case 1: 
-      fprintf(file, "ERROR: no se encontró el archivo a compilar.\n");
-    break;
-    case 2:
-      fprintf(file, "ERROR: no se reconoce %s como parte del lenguaje.\n", text);
-    break; 
-  }
+void sendError(char *text){
+  if (error)
+    fprintf(errorsFile, "%s", text);
+  else{
+    fprintf(errorsFile, "ERROR en la línea %d, no se reconoce %s", line, text);
+    error = 1; 
+  }   
+  return; 
+}
 
+void checkError(){
+  if (error){
+    error = 0; 
+    fprintf(errorsFile, "\n");
+  }
   return; 
 }
 
 int main(int argn, char* arg[]){
   
-  errors = fopen("errors.txt", "w");
+  errorsFile = fopen("errors.txt", "w");
 
   if (argn <= 1){
-    sendError(1, errors, ""); 
+    fprintf(errorsFile, "ERROR, no se encontró el archivo a compilar."); 
   } else {
     yyin = fopen(arg[1], "r"); 
     if (yyin != NULL){
@@ -105,10 +115,12 @@ int main(int argn, char* arg[]){
       createFloatList(0, &headFloat, &tailFloat);
 
       yylex();
-      fclose(errors);
+      
     } else {
-      sendError(1, errors, "");
+      fprintf(errorsFile, "ERROR, no se encontró el archivo a compilar."); 
     }
   }
+
+  fclose(errorsFile);
   return 0; 
 }
