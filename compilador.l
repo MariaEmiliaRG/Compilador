@@ -7,6 +7,7 @@
 */
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h> 
 #include "list.h"
 
 //Apuntador al archivo donde se almacenarán todos los errores que encuentre el compilador. 
@@ -16,15 +17,18 @@ struct nodeFloat headFloat, tailFloat;
 
 void newFloat(char *text);
 void newInteger(char *text);
+void newKeyWord(char *text);
 void sendError(int type, FILE *file, char *text);
 %}
 
+keyWord    alternative|big|evaluate|instead|large|loop|make|number|other|real|repeat|select|small|step|stop|symbol|throw
 floatn     ([1-9]*|0?)\.[0-9]+
 integern   0|([1-9][0-9]*)|([Oo][1-7][0-7]*)
 others     [^ \n]
 
 %%
 
+{keyWord}   {newKeyWord(yytext);}
 {floatn}    {newFloat(yytext);}
 {integern}  {newInteger(yytext);}
 {others}    {sendError(2, errors, yytext);}
@@ -33,7 +37,7 @@ others     [^ \n]
 
 void newFloat(char *text){
   addFloatElement(atof(text), &tailFloat);
-  //createToken();
+  //createToken(, tailFloat -> token);
   return; 
 }
 
@@ -48,8 +52,31 @@ void newInteger(char *text){
     
   //printf("octal: %o, decimal: %d", oNum, oNum);
 
-  //createToken();
+  //createToken(, oNum);
+  return; 
+}
 
+void newKeyWord(char *text){
+  char *keyWords[] = {"alternative","big","evaluate","instead","large","loop","make","number",
+                      "other","real","repeat","select","small","step","stop","symbol","throw"};
+
+  //Algoritmo de búsqueda binaria para hallar la posición de la palabra reservada y añadirlo al token. 
+  int min = 0;
+  int max = 16;
+  int mid = (max + min)/2;
+
+  while(max >= min){
+    //text es mayor
+    mid = (max + min)/2;
+    if(strcmp(keyWords[mid],text) > 0)
+      max = mid - 1; 
+    else if (strcmp(keyWords[mid],text) < 0)
+      min = mid + 1; 
+    else 
+      break; 
+  }
+
+  //createToken(,mid);
 }
 
 void sendError(int type, FILE *file, char *text){
