@@ -13,7 +13,11 @@
 //Apuntador al archivo donde se almacenarán todos los errores que encuentre el compilador. 
 FILE *errorsFile; 
 
-struct nodeFloat headFloat, tailFloat; 
+struct nodeFloat headFloat, tailFloat;
+struct nodeToken headToken, tailToken;
+
+
+//Variables para llevar un control en el manejo de errores. 
 int line = 1; 
 int error = 0; 
 
@@ -42,7 +46,7 @@ nextLine   \n
 
 void newFloat(char *text){
   addFloatElement(atof(text), &tailFloat);
-  //createToken(, tailFloat -> token);
+  addToken(3, tailFloat.token, &tailToken);
   return; 
 }
 
@@ -54,10 +58,7 @@ void newInteger(char *text){
   } else {
     oNum = atoi(text);
   }
-    
-  //printf("octal: %o, decimal: %d", oNum, oNum);
-
-  //createToken(, oNum);
+  addToken(2, oNum, &tailToken);
   return; 
 }
 
@@ -80,8 +81,7 @@ void newKeyWord(char *text){
     else 
       break; 
   }
-
-  //createToken(,mid);
+  addToken(0, mid, &tailToken);
 }
 
 void sendError(char *text){
@@ -113,6 +113,7 @@ int main(int argn, char* arg[]){
     if (yyin != NULL){
 
       createFloatList(0, &headFloat, &tailFloat);
+      createTokenList(-1, -1, &headToken, &tailToken);
 
       yylex();
       

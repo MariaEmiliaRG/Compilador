@@ -20,6 +20,15 @@ struct nodeFloat{
     struct nodeFloat *next;
 };
 
+/*
+Estructura para crear la lista de los tokens. 
+*/
+struct nodeToken{
+    int class;
+    int value;  
+    struct nodeToken *next;
+};
+
 void createFloatList(float numF, struct nodeFloat *head, struct nodeFloat *tail){
     head = (struct nodeFloat *)malloc(sizeof(struct nodeFloat)); 
     if(head == NULL){
@@ -41,6 +50,32 @@ void addFloatElement(float numF, struct nodeFloat *tail){
     }
     temp -> num = numF;
     temp -> token = tail -> token + 1;
+    temp -> next = NULL;
+    tail -> next = temp;
+    tail = tail->next;
+}
+
+void createTokenList(int class, int value, struct nodeToken *head, struct nodeToken *tail){
+    head = (struct nodeToken *)malloc(sizeof(struct nodeToken)); 
+    if(head == NULL){
+        printf("ERROR with memory");
+        exit(0);
+    }
+    head -> class = class;
+    head -> value = value;
+    head -> next = NULL;
+    tail = head;
+} 
+
+void addToken(int class, int value, struct nodeToken *tail){
+    struct nodeToken *temp;
+    temp = (struct nodeToken *)malloc(sizeof(struct nodeToken));
+    if(temp == NULL){
+        printf("ERROR with memory");
+        exit(0);
+    }
+    temp -> class = class;
+    temp -> value = value;
     temp -> next = NULL;
     tail -> next = temp;
     tail = tail->next;
