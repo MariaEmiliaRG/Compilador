@@ -15,23 +15,41 @@ FILE *errors;
 struct nodeFloat headFloat, tailFloat; 
 
 void newFloat(char *text);
+void newInteger(char *text);
 void sendError(int type, FILE *file, char *text);
 %}
 
-floatn ([1-9]*|0?)\.[0-9]+
-others [^ \n]
+floatn     ([1-9]*|0?)\.[0-9]+
+integern   0|([1-9][0-9]*)|([Oo][1-7][0-7]*)
+others     [^ \n]
 
 %%
 
 {floatn}    {newFloat(yytext);}
+{integern}  {newInteger(yytext);}
 {others}    {sendError(2, errors, yytext);}
 
 %%
 
 void newFloat(char *text){
   addFloatElement(atof(text), &tailFloat);
-  //createToken()
+  //createToken();
   return; 
+}
+
+void newInteger(char *text){
+  int oNum;
+  if(text[0] == 'o' || text[0] == 'O'){
+    text[0] = '0'; 
+    sscanf(text, "%o", &oNum);
+  } else {
+    oNum = atoi(text);
+  }
+    
+  //printf("octal: %o, decimal: %d", oNum, oNum);
+
+  //createToken();
+
 }
 
 void sendError(int type, FILE *file, char *text){
