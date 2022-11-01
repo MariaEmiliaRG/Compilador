@@ -41,7 +41,7 @@ int cuentaSimbolos = 0;
 struct nodeSimbol{
 	struct nodeSimbol *next;
 	int pos;
-	char name[20];
+	char nombre[20];
 	int tipo;
 };
 
@@ -54,18 +54,18 @@ struct list tablaSimbolos;
 
 //Funcion que sirve para agregar nodos a la lista de simbolos
 int agregarElemento(char *name){
-  int pos = 0;
+  int posicion = 0;
   //Verifica si existen elementos en la lista, de no existir inicializa la lista
   if(cuentaSimbolos == 0){
     struct nodeSimbol *tmp;
     tmp = (struct nodeSimbol*)malloc(sizeof(struct nodeSimbol));
     tmp -> next = NULL;
     tmp -> pos = cuentaSimbolos;
-    srtcpy(tmp->nombre, name);
+    strcpy(tmp->nombre, name);
     tmp -> tipo = -1;
     tablaSimbolos.head = tmp;
     tablaSimbolos.tail = tmp;
-    pos = cuentaSimbolos;
+    posicion = cuentaSimbolos;
     fprintf(ptrSimbolos, "%d %s -1\n", cuentaSimbolos, name);
   }else{//En caso de ya haber elementos
     posicion = buscarElemento(name);//Se almacena la posición que retorna buscarElemento 
@@ -75,7 +75,7 @@ int agregarElemento(char *name){
       tmp = (struct nodeSimbol*)malloc(sizeof(struct nodeSimbol));
       tmp -> next = NULL;
       tmp -> pos = cuentaSimbolos;
-      srtcpy(tmp -> nombre, name);
+      strcpy(tmp -> nombre, name);
       tmp -> tipo = -1;
       tablaSimbolos.tail -> next = tmp;
       tablaSimbolos.tail = tmp;
@@ -130,7 +130,7 @@ void imprimirArchivos(){
   ptrTokens=fopen("Tokens.txt","r");
   printf("Tokens:\n\n");
   while(fgets (imprimir, 40, ptrTokens) != NULL){
-    printf("%s", imprimr);
+    printf("%s", imprimir);
   }
   fclose(ptrTokens);
   printf("\n\n\n");
@@ -145,7 +145,7 @@ void imprimirArchivos(){
   }else{
     printf("No hay elementos en la tabla de simbolos\n");
   }
-  printf("\n\n\n")
+  printf("\n\n\n");
 
   printf("Tabla de literales\n");
     if(cuentaSimbolos){
@@ -159,38 +159,35 @@ void imprimirArchivos(){
   }
 }
 
+/*
+{constCad} {fprintf(ptrTokens, "(4,%d)\n", cuentaLiteralesCad);
+            fprintf(ptrLiteralesCad, ("(4,%d)\n", cuentaLiteralesCad));
+            cuentaLiteralesCad++;}
+            ("[^"'\n\r]+")|("'")|('[^'\n\r]')
+            ("[^"'\n\r]+")|("'")|('[^'\n\r]')
+*/
+
+
 %}
 keyword alternative|big|evaluate|instead|large|loop|make|number|other|real|repeat|select|small|step|stop|symbol|throw
 ident \$[A-Za-z]+
 integer 0|([1-9][0-9]*)|([oO][1-7][0-7]+)
 floatn ([1-9]*|0?)\.[0-9]+
-constCad ("[^"'\n\r]+")|("'")|('[^'\n\r]')
+constCad \"[^\"]{0,38}\"
 special [\[\]\(\)\{\},;:]
 opArit [-\+\*\\\^/%]
 opRel [<>=!]=|[<>]
 opAsig [=]
 others [^ /n]
 
-
 %%
-
-{ident} {fprintf(ptrTokens, "(1,%d)\n", agregarElemento(yytext));
-        //addToken(1, tailFloat.token, &tailToken);
-}
+{ident} {fprintf(ptrTokens, "(1,%d)\n", agregarElemento(yytext));}
 {constCad} {fprintf(ptrTokens, "(4,%d)\n", cuentaLiteralesCad);
-            fprintf(ptrLiteralesCad, ("(4,%d)\n", cuentaLiteralesCad));
-            cuentaLiteralesCad++;
-            //addToken(4, tailFloat.token, &tailToken);
-}
-{special} {fprintf(ptrTokens, "(5,%c)\n", yytext[0]);
-            //addToken(5, tailFloat.token, &tailToken);
-}
-{opRel} {fprintf(ptrTokens, "(7,%d)\n", catRelacionales(yytext));
-        //addToken(7, tailFloat.token, &tailToken);
-}
-{opArit} {fprintf(ptrTokens, "(6,%c)\n", yytext[0]);
-          //addToken(6, tailFloat.token, &tailToken);
-}
+            fprintf(ptrLiteralesCad, "%d %s\n", cuentaLiteralesCad, yytext);
+            cuentaLiteralesCad++;}
+{special} {fprintf(ptrTokens, "(5,%c)\n", yytext[0]);}
+{opRel} {fprintf(ptrTokens, "(7,%d)\n", catRelacionales(yytext));}
+{opArit} {fprintf(ptrTokens, "(6,%c)\n", yytext[0]);}
 %%
 int main(int argc, char *argv[]){
   yyin=fopen(argv[1], "r");
