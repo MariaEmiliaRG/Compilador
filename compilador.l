@@ -12,11 +12,17 @@
 
 /*
   Descripción del programa
-
+  El programa consiste en el analizador léxico de un compilador, se
+  encarga de reconocer los componentes léxicos de un lenguaje.
 */
 
 /*
   Entradas y salidas
+  El programa recibe como argumento desde terminal un archivo de texto, el cual 
+  Como salida el program genera 5 archivos: "Tokens.txt", "TablaSimbolos.txt"
+  "TLiteralesCadenas.txt", "TLiteralesReales.txt" y "errorsFile.txt"
+  A su vez el contenido de los archivos  "Tokens.txt", "TablaSimbolos.txt"
+  "TLiteralesCadenas.txt" y "TLiteralesReales.txt" se imprimen en pantalla. 
 */
 
 #include <stdio.h>
@@ -321,12 +327,14 @@ void newIdent(char *text){
   fprintf(ptrTokens, "(1,%d)\n", agregarElemento(text));
 }
 
+//Agrega una cadena a la tabla de literales cadenas y genera el respectivo token
 void nexConstCad(char *text){
   fprintf(ptrTokens, "(4,%d)\n", cuentaLiteralesCad);
   fprintf(ptrLiteralesCad, "%d %s\n", cuentaLiteralesCad, text);
   cuentaLiteralesCad++;
 }
 
+//Almacena los errores en un archivo
 void sendError(char *text){
   if (error)
     fprintf(errorsFile, "%s", text);
@@ -336,7 +344,7 @@ void sendError(char *text){
   }   
   return; 
 }
-
+//Verifica errores
 void checkError(){
   if (error){
     error = 0; 
