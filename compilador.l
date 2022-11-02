@@ -3,7 +3,7 @@
   Proyecto de la clase de Compiladores
   Analizador Léxico de un compilador
   Profesora: M.C. Laura Sandoval Montaño
-  Grupo: 2
+  Grupo: 3
   Semestre 2023-1
   Autores: María Emilia Ramírez Gómez y Bryan Vargas Pacheco
   Fecha de entrega: 02 de noviembre de 2022
