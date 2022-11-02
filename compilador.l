@@ -29,22 +29,32 @@
 #include <stdlib.h>
 #include <string.h> 
 
-//Apuntador al archivo donde se almacenarán todos los errores que encuentre el compilador. 
+//Archivo donde se almacenarán todos los errores que encuentre el compilador. 
 FILE *errorsFile; 
+
+//Archivos donde se almacenarán las tablas de literales, y símbolos.
 FILE *ptrSimbolos;
 FILE *ptrLiteralesCad;
-FILE *ptrTokens;
 FILE *ptrReales;
+
+//Archivo donde se almacenarán los tokens. 
+FILE *ptrTokens;
+
 
 //Variables para llevar un control en el manejo de errores. 
 int line = 1; 
+//Tener el registro de si el caracter previo tampoco ha sido reconocido, de este modo en el archivo de errores podemos mostrar la cadena completa 
+//y no caracter por caracter.
 int error = 0; 
-//Variable para llevar la cuenta de cadenas de texto
+
+//Variables para conocer cuántos elementos hemos almacenado en las tablas correspondientes. 
+//Para cadenas de texto
 int cuentaLiteralesCad=0;
 //Variable para llevar la cuenta de identificadores
 int cuentaSimbolos = 0;
 //Variable para llevar la cuenta de números reales reales
 int cuentaReales = 0; 
+
 void newIdent(char *text);
 void nexConstCad(char *text);
 void newSpecial(char *text);
@@ -92,7 +102,6 @@ opRel      [<>=!]=|[<>]
 opAsig     [=]
 others     [^ \n]
 nextLine   \n
-
 %%
 {keyword}   {checkError(); newKeyWord(yytext);}
 {ident}     {checkError(); newIdent(yytext);}
@@ -109,22 +118,22 @@ nextLine   \n
 int main(int argn, char* arg[]){
   
   errorsFile = fopen("errors.txt", "w");
-//Verificación de existencia del archivo
+
+  //Comprobar que el usuario halla introducido el archivo a ser compilado. 
   if (argn <= 1){
     fprintf(errorsFile, "ERROR, no se encontró el archivo a compilar."); 
   } else {
     yyin = fopen(arg[1], "r"); 
+    //El programa procede si el archivo existe, de lo contrario manda un error. 
     if (yyin != NULL){
-	//Colocando los títulos en cada archivo
+
+      //Creamos archivos en caso de no existir o sobreescribimos. 
       ptrReales = fopen("TLiteralesReales.txt", "w");
       fclose(ptrReales);
-
       ptrSimbolos=fopen("TablaSimbolos.txt", "w");
       fclose(ptrSimbolos);
-
       ptrLiteralesCad=fopen("TLiteralesCadenas.txt", "w");
       fclose(ptrLiteralesCad);
-
       ptrTokens=fopen("Tokens.txt", "w");
       fclose(ptrTokens);
 
@@ -134,8 +143,7 @@ int main(int argn, char* arg[]){
       ptrReales=fopen("TLiteralesReales.txt", "a");
       ptrTokens=fopen("Tokens.txt", "a");
       
-
-
+      //Inicio de identificación de los componentes léxicos.
       yylex();
 
       //Cerrando archivos
@@ -230,7 +238,10 @@ int catRelacionales(char *operador){
 //Imprimit archivos
 
 
-//Imprimir una sola tabla
+/*
+Imprimir un archivo
+Se introduce su nombre así como el encabezado que queremos que salga en pantalla para poder identificarlo. 
+*/
 void imprimirArchivo(char *file, char *text){
   char imprimir[100];
   FILE *ptrFile; 
@@ -241,9 +252,13 @@ void imprimirArchivo(char *file, char *text){
   }
   fclose(ptrFile);
   printf("\n\n\n");
+  return; 
 }
 
-//Imprime cada una de las tablas que requiere el programa
+/*
+Imprime cada una de las tablas que ha generado el programa
+Utilizamos la función imprimirArchivo. 
+*/
 void imprimirArchivos(){
   
   imprimirArchivo("Tokens.txt", "Tokens");
@@ -266,8 +281,16 @@ void imprimirArchivos(){
 //Agrega el token para caracteres especiales
 void newSpecial(char *text){
   fprintf(ptrTokens, "(5,%c)\n", text[0]);
+  return; 
 }
-//Agrega el token para números reales y los datos correspondientes a la tabal de literales reales
+
+/*
+Se realiza la conversión de cadena a flotante, de este modo en la tabla todos los números se ven homogeneos
+.23  -> 0.23
+0.23 -> 0.23
+1.23 -> 1.23
+Así mismo, se crea el token correspondiente. 
+*/
 void newFloat(char *text){
   fprintf(ptrReales, "%d %lf\n", cuentaReales, atof(text));
   fprintf(ptrTokens, "(3,%d)\n", cuentaReales);
@@ -277,12 +300,17 @@ void newFloat(char *text){
 //Agrega token para operadores aritméticos
 void newOpArit(char *text){
   fprintf(ptrTokens, "(6,%c)\n", text[0]);
+  return; 
 }
 //Agrega el token para operadores de asignación
 void newOpAsig(){
   fprintf(ptrTokens, "(8,=)\n");
+  return; 
 }
-//Agrega el token para constantes enteras
+
+/*
+En caso de que el número esté en el sistema octal, se realiza la conversión para poder almacenarlo en la tabla de tokens en su forma decimal. 
+*/
 void newInteger(char *text){
   int oNum;
   if(text[0] == 'o' || text[0] == 'O'){
@@ -298,8 +326,14 @@ void newInteger(char *text){
 //Agrega el token para operadores relacionales
 void newOpRel(char *text){
   fprintf(ptrTokens, "(7,%d)\n", catRelacionales(text));
+  return; 
 }
-//Agrega el token para palabras reservadas
+
+/*
+Identificar en qué posisción del arreglo de palabras reservadas se encuentra el componente léxico
+Para ello nos ayudamos del algoritmo de búsqueda binaria, ya que el arreglo se encunetra ordenado y no será necesario realizar muchas iteraciones. 
+Posteriormente, se genera el token correspondiente. 
+*/
 void newKeyWord(char *text){
   char *keyWords[] = {"alternative","big","evaluate","instead","large","loop","make","number",
                       "other","real","repeat","select","small","step","stop","symbol","throw"};
@@ -321,10 +355,12 @@ void newKeyWord(char *text){
   }
 
   fprintf(ptrTokens, "(0,%d)\n", mid);
+  return; 
 }
 //Agrega el token para identificadores
 void newIdent(char *text){
   fprintf(ptrTokens, "(1,%d)\n", agregarElemento(text));
+  return;
 }
 
 //Agrega una cadena a la tabla de literales cadenas y genera el respectivo token
@@ -332,9 +368,14 @@ void nexConstCad(char *text){
   fprintf(ptrTokens, "(4,%d)\n", cuentaLiteralesCad);
   fprintf(ptrLiteralesCad, "%d %s\n", cuentaLiteralesCad, text);
   cuentaLiteralesCad++;
+  return; 
 }
 
-//Almacena los errores en un archivo
+/*
+De no reconocer la cadena como alguna de las clases de los componentes léxicos especificados, esta se irá escribiendo, caracter por caracter hasta hallar un componente léxico 
+válido o el fin de archivo
+La variable error nos ayuda a saber si el caracter previo tampoco fue reconocido, por ende este forma parte del mismo error. 
+*/
 void sendError(char *text){
   if (error)
     fprintf(errorsFile, "%s", text);
@@ -344,7 +385,11 @@ void sendError(char *text){
   }   
   return; 
 }
-//Verifica errores
+
+/*
+En caso de encontrar un componente léxico válido es importante darle continuidad a los errores. Por ello, si la variable error es verdadera, 
+hay que agregar un salto de línea en el archivo de errores, y tenemos que modificar la variable error a 0 (falso)
+*/
 void checkError(){
   if (error){
     error = 0; 
