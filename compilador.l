@@ -22,14 +22,13 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h> 
-#include "list.h"
 
 //Apuntador al archivo donde se almacenarán todos los errores que encuentre el compilador. 
 FILE *errorsFile; 
-
 FILE *ptrSimbolos;
 FILE *ptrLiteralesCad;
 FILE *ptrTokens;
+FILE *ptrReales;
 
 //Variables para llevar un control en el manejo de errores. 
 int line = 1; 
@@ -38,7 +37,14 @@ int error = 0;
 int cuentaLiteralesCad=0;
 //Para identificadores
 int cuentaSimbolos = 0;
-
+//Para reales
+int cuentaReales = 0; 
+void newIdent(char *text);
+void nexConstCad(char *text);
+void newSpecial(char *text);
+void newOpRel(char *text);
+void newOpArit(char *text);
+void newOpAsig();
 void newFloat(char *text);
 void newInteger(char *text);
 void newKeyWord(char *text);
@@ -64,23 +70,8 @@ struct listSimbol{
   struct nodeSimbol *tail;
 };
 
-//TODO: Pasarlo a archivos. 
-struct listFloat{
-  struct nodeFloat *head;
-  struct nodeFloat *tail;
-};
-
-struct listToken{
-  struct nodeToken *head;
-  struct nodeToken *tail;
-};
-
 struct listSimbol tablaSimbolos;
-struct listFloat tablaReales; 
-struct listToken tokens; 
 
-struct nodeFloat headFloat, tailFloat;
-struct nodeToken headToken, tailToken;
 
 %}
 keyword    alternative|big|evaluate|instead|large|loop|make|number|other|real|repeat|select|small|step|stop|symbol|throw
@@ -97,18 +88,16 @@ nextLine   \n
 
 %%
 {keyword}   {checkError(); newKeyWord(yytext);}
-{ident}     {checkError(); fprintf(ptrTokens, "(1,%d)\n", agregarElemento(yytext));}
+{ident}     {checkError(); newIdent(yytext);}
 {floatn}    {checkError(); newFloat(yytext);}
 {integern}  {checkError(); newInteger(yytext);}
-{constCad}  {checkError(); fprintf(ptrTokens, "(4,%d)\n", cuentaLiteralesCad);
-            fprintf(ptrLiteralesCad, "%d %s\n", cuentaLiteralesCad, yytext);
-            cuentaLiteralesCad++;}
-{special}   {checkError(); fprintf(ptrTokens, "(5,%c)\n", yytext[0]);}
-{opRel}     {checkError(); fprintf(ptrTokens, "(7,%d)\n", catRelacionales(yytext));}
-{opArit}    {checkError(); fprintf(ptrTokens, "(6,%c)\n", yytext[0]);}
+{constCad}  {checkError(); nexConstCad(yytext);}
+{special}   {checkError(); newSpecial(yytext);}
+{opRel}     {checkError(); newOpRel(yytext);}
+{opArit}    {checkError(); newOpArit(yytext);}
+{opAsig}    {checkError(); newOpAsig();}
 {others}    {sendError(yytext);}
 {nextLine}  {checkError(); line ++;}
-
 %%
 int main(int argn, char* arg[]){
   
@@ -120,25 +109,24 @@ int main(int argn, char* arg[]){
     yyin = fopen(arg[1], "r"); 
     if (yyin != NULL){
 
-      createFloatList(0, &headFloat, &tailFloat);
-      createTokenList(-1, -1, &headToken, &tailToken);
+      ptrReales = fopen("TLiteralesReales.txt", "w");
+      fclose(ptrReales);
 
       ptrSimbolos=fopen("TablaSimbolos.txt", "w");
-      fprintf(ptrSimbolos, "Tabla de simbolos : \n\n");
       fclose(ptrSimbolos);
 
       ptrLiteralesCad=fopen("TLiteralesCadenas.txt", "w");
-      fprintf(ptrLiteralesCad, "Tabla de literales cadenas : \n\n");
       fclose(ptrLiteralesCad);
 
       ptrTokens=fopen("Tokens.txt", "w");
-      fprintf(ptrTokens, "TOKENS : \n\n");
       fclose(ptrTokens);
 
       //Asignando apuntadores y abriendo archivos
       ptrSimbolos=fopen("TablaSimbolos.txt", "a");
-      ptrLiteralesCad=fopen("TablaLiteralesCadenas.txt", "a");
+      ptrLiteralesCad=fopen("TLiteralesCadenas.txt", "a");
+      ptrReales=fopen("TLiteralesReales.txt", "a");
       ptrTokens=fopen("Tokens.txt", "a");
+      
 
 
       yylex();
@@ -147,6 +135,7 @@ int main(int argn, char* arg[]){
       fclose(ptrSimbolos);
       fclose(ptrLiteralesCad);
       fclose(ptrTokens);
+      fclose(ptrReales);
 
       //Imprimiendo archivos
       imprimirArchivos();
@@ -176,6 +165,7 @@ int agregarElemento(char *name){
     tablaSimbolos.tail = tmp;
     posicion = cuentaSimbolos;
     fprintf(ptrSimbolos, "%d %s -1\n", cuentaSimbolos, name);
+    cuentaSimbolos++;
   }else{//En caso de ya haber elementos
     posicion = buscarElemento(name);//Se almacena la posición que retorna buscarElemento 
     //Si la posición vale -1 significa que el identificcador aún no existe, por lo que se crea, en otro caso solo se almacena la posición
@@ -233,48 +223,57 @@ int catRelacionales(char *operador){
 //Imprimit archivos
 
 
-//Imprime cada una de las tablas que requiere el programa
-void imprimirArchivos(){
+//Imprimir una sola tabla
+void imprimirArchivo(char *file, char *text){
   char imprimir[40];
-  ptrTokens=fopen("Tokens.txt","r");
-  printf("Tokens:\n\n");
-  while(fgets (imprimir, 40, ptrTokens) != NULL){
+  FILE *ptrFile; 
+  ptrFile=fopen(file,"r");
+  printf("%s:\n\n", text);
+  while(fgets (imprimir, 40, ptrFile) != NULL){
     printf("%s", imprimir);
   }
-  fclose(ptrTokens);
+  fclose(ptrFile);
   printf("\n\n\n");
-
-  printf("Tabla de simbolos");
-  if(cuentaSimbolos){
-    ptrSimbolos=fopen("TablaSimbolos.txt", "r");
-	  while ( fgets (imprimir, 40, ptrSimbolos) != NULL ){
-		  printf("%s", imprimir);
-    }
-	  fclose(ptrSimbolos);
-  }else{
-    printf("No hay elementos en la tabla de simbolos\n");
-  }
-  printf("\n\n\n");
-
-  printf("Tabla de literales\n");
-    if(cuentaSimbolos){
-    ptrLiteralesCad = fopen("TLiteralesCadenas.txt", "r");
-	  while ( fgets (imprimir, 40, ptrLiteralesCad) != NULL ){
-		  printf("%s", imprimir);
-    }
-	  fclose(ptrLiteralesCad);
-  }else{
-    printf("No hay elementos en la tabla de literales cadenas\n");
-  }
 }
 
+//Imprime cada una de las tablas que requiere el programa
+void imprimirArchivos(){
+  
+  imprimirArchivo("Tokens.txt", "Tokens");
 
-void newFloat(char *text){
-  addFloatElement(atof(text), &tailFloat);
-  addToken(3, tailFloat.token, &tailToken);
+  if(cuentaSimbolos)
+    imprimirArchivo("TablaSimbolos.txt", "Tabla de simbolos");
+  else 
+    printf("No hay elementos en la tabla de simbolos\n");
+
+  if(cuentaLiteralesCad)
+    imprimirArchivo("TLiteralesCadenas.txt", "Tabla de literales - cadenas");
+  else 
+    printf("No hay elementos en la tabla de literales - cadenas\n");
+
+  if(cuentaReales)
+    imprimirArchivo("TLiteralesReales.txt", "Tabla de literales - reales");
+
   return; 
 }
 
+void newSpecial(char *text){
+  fprintf(ptrTokens, "(5,%c)\n", text[0]);
+}
+void newFloat(char *text){
+  fprintf(ptrReales, "%d %lf\n", cuentaReales, atof(text));
+  fprintf(ptrTokens, "(3,%d)\n", cuentaReales);
+  cuentaReales++; 
+  return; 
+}
+
+void newOpArit(char *text){
+  fprintf(ptrTokens, "(6,%c)\n", text[0]);
+}
+
+void newOpAsig(){
+  fprintf(ptrTokens, "(8,=)\n");
+}
 void newInteger(char *text){
   int oNum;
   if(text[0] == 'o' || text[0] == 'O'){
@@ -283,8 +282,13 @@ void newInteger(char *text){
   } else {
     oNum = atoi(text);
   }
-  addToken(2, oNum, &tailToken);
+
+  fprintf(ptrTokens, "(2,%d)\n", oNum);
   return; 
+}
+
+void newOpRel(char *text){
+  fprintf(ptrTokens, "(7,%d)\n", catRelacionales(text));
 }
 
 void newKeyWord(char *text){
@@ -306,7 +310,18 @@ void newKeyWord(char *text){
     else 
       break; 
   }
-  addToken(0, mid, &tailToken);
+
+  fprintf(ptrTokens, "(0,%d)\n", mid);
+}
+
+void newIdent(char *text){
+  fprintf(ptrTokens, "(1,%d)\n", agregarElemento(text));
+}
+
+void nexConstCad(char *text){
+  fprintf(ptrTokens, "(4,%d)\n", cuentaLiteralesCad);
+  fprintf(ptrLiteralesCad, "%d %s\n", cuentaLiteralesCad, text);
+  cuentaLiteralesCad++;
 }
 
 void sendError(char *text){
