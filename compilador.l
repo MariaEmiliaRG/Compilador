@@ -78,7 +78,7 @@ keyword    alternative|big|evaluate|instead|large|loop|make|number|other|real|re
 ident      \$[A-Za-z]+
 floatn     ([1-9]*|0?)\.[0-9]+
 integern   0|([1-9][0-9]*)|([Oo][1-7][0-7]*)
-constCad   \"[^\"]{0,38}\"
+constCad   \"[^\"]{0,100}\"
 special    [\[\]\(\)\{\},;:]
 opArit     [-\+\*\\\^/%]
 opRel      [<>=!]=|[<>]
@@ -225,11 +225,11 @@ int catRelacionales(char *operador){
 
 //Imprimir una sola tabla
 void imprimirArchivo(char *file, char *text){
-  char imprimir[40];
+  char imprimir[100];
   FILE *ptrFile; 
   ptrFile=fopen(file,"r");
   printf("%s:\n\n", text);
-  while(fgets (imprimir, 40, ptrFile) != NULL){
+  while(fgets (imprimir, 100, ptrFile) != NULL){
     printf("%s", imprimir);
   }
   fclose(ptrFile);
