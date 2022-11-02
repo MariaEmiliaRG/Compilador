@@ -131,7 +131,7 @@ int main(int argn, char* arg[]){
 
       yylex();
 
-            //Cerrando archivos
+      //Cerrando archivos
       fclose(ptrSimbolos);
       fclose(ptrLiteralesCad);
       fclose(ptrTokens);
