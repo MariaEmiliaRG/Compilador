@@ -33,11 +33,11 @@ FILE *ptrReales;
 //Variables para llevar un control en el manejo de errores. 
 int line = 1; 
 int error = 0; 
-//Para cadenas de texto
+//Variable para llevar la cuenta de cadenas de texto
 int cuentaLiteralesCad=0;
-//Para identificadores
+//Variable para llevar la cuenta de identificadores
 int cuentaSimbolos = 0;
-//Para reales
+//Variable para llevar la cuenta de números reales reales
 int cuentaReales = 0; 
 void newIdent(char *text);
 void nexConstCad(char *text);
@@ -65,11 +65,12 @@ struct nodeSimbol{
 	int tipo;
 };
 
+//Estructura donde se almacena el head y tail de la tabla de simbolos
 struct listSimbol{
   struct nodeSimbol *head;
   struct nodeSimbol *tail;
 };
-
+//Creación de la tabla de símbolos
 struct listSimbol tablaSimbolos;
 
 
@@ -102,13 +103,13 @@ nextLine   \n
 int main(int argn, char* arg[]){
   
   errorsFile = fopen("errors.txt", "w");
-
+//Verificación de existencia del archivo
   if (argn <= 1){
     fprintf(errorsFile, "ERROR, no se encontró el archivo a compilar."); 
   } else {
     yyin = fopen(arg[1], "r"); 
     if (yyin != NULL){
-
+	//Colocando los títulos en cada archivo
       ptrReales = fopen("TLiteralesReales.txt", "w");
       fclose(ptrReales);
 
@@ -256,24 +257,26 @@ void imprimirArchivos(){
 
   return; 
 }
-
+//Agrega el token para caracteres especiales
 void newSpecial(char *text){
   fprintf(ptrTokens, "(5,%c)\n", text[0]);
 }
+//Agrega el token para números reales y los datos correspondientes a la tabal de literales reales
 void newFloat(char *text){
   fprintf(ptrReales, "%d %lf\n", cuentaReales, atof(text));
   fprintf(ptrTokens, "(3,%d)\n", cuentaReales);
   cuentaReales++; 
   return; 
 }
-
+//Agrega token para operadores aritméticos
 void newOpArit(char *text){
   fprintf(ptrTokens, "(6,%c)\n", text[0]);
 }
-
+//Agrega el token para operadores de asignación
 void newOpAsig(){
   fprintf(ptrTokens, "(8,=)\n");
 }
+//Agrega el token para constantes enteras
 void newInteger(char *text){
   int oNum;
   if(text[0] == 'o' || text[0] == 'O'){
@@ -286,11 +289,11 @@ void newInteger(char *text){
   fprintf(ptrTokens, "(2,%d)\n", oNum);
   return; 
 }
-
+//Agrega el token para operadores relacionales
 void newOpRel(char *text){
   fprintf(ptrTokens, "(7,%d)\n", catRelacionales(text));
 }
-
+//Agrega el token para palabras reservadas
 void newKeyWord(char *text){
   char *keyWords[] = {"alternative","big","evaluate","instead","large","loop","make","number",
                       "other","real","repeat","select","small","step","stop","symbol","throw"};
@@ -313,7 +316,7 @@ void newKeyWord(char *text){
 
   fprintf(ptrTokens, "(0,%d)\n", mid);
 }
-
+//Agrega el token para identificadores
 void newIdent(char *text){
   fprintf(ptrTokens, "(1,%d)\n", agregarElemento(text));
 }
