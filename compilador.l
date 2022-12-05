@@ -41,6 +41,9 @@ FILE *ptrReales;
 FILE *ptrTokens;
 
 
+//Archivo donde se almacena la cadena de atomos
+FILE *ptrCadenaAtomos;
+FILE *ptrErrores;
 //Variables para llevar un control en el manejo de errores. 
 int line = 1; 
 //Tener el registro de si el caracter previo tampoco ha sido reconocido, de este modo en el archivo de errores podemos mostrar la cadena completa 
@@ -54,6 +57,13 @@ int cuentaLiteralesCad=0;
 int cuentaSimbolos = 0;
 //Variable para llevar la cuenta de números reales reales
 int cuentaReales = 0; 
+
+//Variables utilizadas para el funcionamiento del analizador sintáctico
+char cadenaAtomos[2048];  // Longitud m�ximo del programa a analizar = 2048 atomos, 2 kilobytes de espacio en la memoria para atomos.
+int cuentaAtomos=0;
+int cuentaSintactica=0;
+int errorSint = 0;
+char c;
 
 void newIdent(char *text);
 void nexConstCad(char *text);
@@ -71,6 +81,31 @@ int buscarElemento(char *name);
 int catRelacionales(char *name);
 void imprimirArchivos();
 
+//Funciones utilizadas para el analizador sintáctico
+
+void errorSint();
+void Program();
+void otraFunc();
+void Func();
+void Param();
+void otroParam();
+void Cuerpo();
+void Decl();
+void D();
+void Tipo();
+void K();
+void Q();
+void N();
+void C();
+void A();
+void AP();
+void E();
+void EP();
+void T();
+void TP();
+void F();
+void R();
+void RP();
 
 //Para identificadores
 //La estructura de lista utilizada para crear la tabla de simbolos
@@ -95,6 +130,7 @@ keyword    alternative|big|evaluate|instead|large|loop|make|number|other|real|re
 ident      \$[A-Za-z]+
 floatn     ([1-9]*|0?)\.[0-9]+
 integern   0|([1-9][0-9]*)|([Oo][1-7][0-7]*)
+carac '.'
 constCad   \"[^\"]{0,100}\"
 special    [\[\]\(\)\{\},;:]
 opArit     [-\+\*\\\^/%]
@@ -108,6 +144,7 @@ nextLine   \n
 {floatn}    {checkError(); newFloat(yytext);}
 {integern}  {checkError(); newInteger(yytext);}
 {constCad}  {checkError(); nexConstCad(yytext);}
+{carac}     {checkError(); newChar(yytext)}
 {special}   {checkError(); newSpecial(yytext);}
 {opRel}     {checkError(); newOpRel(yytext);}
 {opArit}    {checkError(); newOpArit(yytext);}
@@ -219,16 +256,28 @@ int buscarElemento(char *name){
 //Retorna el valor de operador relacional de su respectiva tabla para la generación de tokens
 int catRelacionales(char *operador){
   if(strcmp(operador, "<") == 0){
+    cadenaAtomos[cuentaAtomos]='<';
+	cuentaAtomos++;
     return 0;
   }else if(strcmp(operador, ">") == 0){
+    cadenaAtomos[cuentaAtomos]='>';
+	cuentaAtomos++;
     return 1;
   }else if(strcmp(operador, "<=") == 0){
+    adenaAtomos[cuentaAtomos]='l';
+	cuentaAtomos++;
     return 2;
   }else if(strcmp(operador, ">=") == 0){
+    adenaAtomos[cuentaAtomos]='u';
+	cuentaAtomos++;
     return 3;
   }else if(strcmp(operador, "==") == 0){
+    cadenaAtomos[cuentaAtomos]='e';
+	cuentaAtomos++;
     return 4;
   }else if(strcmp(operador, "!=") == 0){
+    adenaAtomos[cuentaAtomos]='d';
+	cuentaAtomos++;
     return 5;
   }else{
     return -1;
@@ -281,6 +330,44 @@ void imprimirArchivos(){
 //Agrega el token para caracteres especiales
 void newSpecial(char *text){
   fprintf(ptrTokens, "(5,%c)\n", text[0]);
+  switch(text[0]){
+    case '[':
+        cadenaAtomos[cuentaAtomos]='[';
+        cuentaAtomos++;
+    break;
+    case ']':
+        cadenaAtomos[cuentaAtomos]='f';
+        cuentaAtomos++;
+    break;
+    case '(':
+        cadenaAtomos[cuentaAtomos]='(';
+        cuentaAtomos++;
+    break;
+    case ')':
+        cadenaAtomos[cuentaAtomos]=')';
+        cuentaAtomos++;
+    break;
+    case '{':
+        cadenaAtomos[cuentaAtomos]='{';
+        cuentaAtomos++;
+    break;
+    case '}':
+        cadenaAtomos[cuentaAtomos]='}';
+        cuentaAtomos++;
+    break;
+    case ',':
+        cadenaAtomos[cuentaAtomos]='f';
+        cuentaAtomos++;
+    break;
+    case ':':
+        cadenaAtomos[cuentaAtomos]='f';
+        cuentaAtomos++;
+    break;
+    case ';':
+        cadenaAtomos[cuentaAtomos]='f';
+        cuentaAtomos++;
+    break;
+  }
   return; 
 }
 
@@ -294,17 +381,50 @@ Así mismo, se crea el token correspondiente.
 void newFloat(char *text){
   fprintf(ptrReales, "%d %lf\n", cuentaReales, atof(text));
   fprintf(ptrTokens, "(3,%d)\n", cuentaReales);
+  cadenaAtomos[cuentaAtomos]='r';
+  cuentaAtomos++;
   cuentaReales++; 
   return; 
 }
 //Agrega token para operadores aritméticos
 void newOpArit(char *text){
   fprintf(ptrTokens, "(6,%c)\n", text[0]);
+  switch(text[0]){
+    case '+':
+        cadenaAtomos[cuentaAtomos]='+';
+        cuentaAtomos++;
+    break;
+    case '-':
+        cadenaAtomos[cuentaAtomos]='-';
+        cuentaAtomos++;
+    break;
+    case: '*':
+        cadenaAtomos[cuentaAtomos]='*';
+        cuentaAtomos++;
+    break;
+    case '/':
+        cadenaAtomos[cuentaAtomos]='/';
+        cuentaAtomos++;
+    break;
+    case '%':
+        cadenaAtomos[cuentaAtomos]='%';
+        cuentaAtomos++;
+    break;
+    case '^':
+        cadenaAtomos[cuentaAtomos]='^';
+        cuentaAtomos++;
+    break;
+    case '\\':
+        cadenaAtomos[cuentaAtomos]='\\';
+        cuentaAtomos++;
+  }
   return; 
 }
 //Agrega el token para operadores de asignación
 void newOpAsig(){
   fprintf(ptrTokens, "(8,=)\n");
+  cadenaAtomos[cuentaAtomos]='=';
+  cuentaAtomos++;
   return; 
 }
 
@@ -319,7 +439,8 @@ void newInteger(char *text){
   } else {
     oNum = atoi(text);
   }
-
+  cadenaAtomos[cuentaAtomos]='n';
+  cuentaAtomos++;
   fprintf(ptrTokens, "(2,%d)\n", oNum);
   return; 
 }
@@ -353,13 +474,66 @@ void newKeyWord(char *text){
     else 
       break; 
   }
-
+  if(mid == 0){
+    cadenaAtomos[cuentaAtomos]='a';
+    cuentaAtomos++;
+  }else if(mid == 1){
+    cadenaAtomos[cuentaAtomos]='b';
+    cuentaAtomos++;
+  }else if(mid == 2){
+    cadenaAtomos[cuentaAtomos]='f';
+    cuentaAtomos++;
+  }else if(mid == 3){
+    cadenaAtomos[cuentaAtomos]='t';
+    cuentaAtomos++;
+  }else if(mid == 4){
+    cadenaAtomos[cuentaAtomos]='g';
+    cuentaAtomos++;
+  }else if(mid == 5){
+    cadenaAtomos[cuentaAtomos]='w';
+    cuentaAtomos++;
+  }else if(mid == 6){
+    cadenaAtomos[cuentaAtomos]='m';
+    cuentaAtomos++;
+  }else if(mid == 7){
+    cadenaAtomos[cuentaAtomos]='#';
+    cuentaAtomos++;
+  }else if(mid == 8){
+    cadenaAtomos[cuentaAtomos]='o';
+    cuentaAtomos++;
+  }else if(mid == 9){
+    cadenaAtomos[cuentaAtomos]='x';
+    cuentaAtomos++;
+  }else if(mid == 10){
+    cadenaAtomos[cuentaAtomos]='j';
+    cuentaAtomos++;
+  }else if(mid == 11){
+    cadenaAtomos[cuentaAtomos]='h';
+    cuentaAtomos++;
+  }else if(mid == 12){
+    cadenaAtomos[cuentaAtomos]='p';
+    cuentaAtomos++;
+  }else if(mid == 13){
+    cadenaAtomos[cuentaAtomos]='c';
+    cuentaAtomos++;
+  }else if(mid == 14){
+    cadenaAtomos[cuentaAtomos]='q';
+    cuentaAtomos++;
+  }else if(mid == 15){
+    cadenaAtomos[cuentaAtomos]='y';
+    cuentaAtomos++;
+  }else if(mid == 16){
+    cadenaAtomos[cuentaAtomos]='z';
+    cuentaAtomos++;
+  }
   fprintf(ptrTokens, "(0,%d)\n", mid);
   return; 
 }
 //Agrega el token para identificadores
 void newIdent(char *text){
   fprintf(ptrTokens, "(1,%d)\n", agregarElemento(text));
+  cadenaAtomos[cuentaAtomos]='i';
+  cuentaAtomos++;
   return;
 }
 
@@ -368,7 +542,15 @@ void nexConstCad(char *text){
   fprintf(ptrTokens, "(4,%d)\n", cuentaLiteralesCad);
   fprintf(ptrLiteralesCad, "%d %s\n", cuentaLiteralesCad, text);
   cuentaLiteralesCad++;
+  cadenaAtomos[cuentaAtomos]='s';
+  cuentaAtomos++;
   return; 
+}
+
+void newChar(char *text){
+  fprintf(ptrTokens, "(4,%c)\n", text);
+  cadenaAtomos[cuentaAtomos]='s';
+  cuentaAtomos++;
 }
 
 /*
@@ -396,4 +578,25 @@ void checkError(){
     fprintf(errorsFile, "\n");
   }
   return; 
+}
+
+//Funciones utilizadas para el analizador sintáctico
+
+void errorSint(char *errores){
+    errorSint++;
+    fprintf(errorsFile, "Error Sintactico, en atomo numero %d, valor %c, se eperaba: '%s' \n", cuentaSintactica, c, errores);
+    c = cadenaAtomos[cuentaSintactica++];
+}
+
+void Program(){
+    c = cadenaAtomos[cuentaSintactica++];
+    if(c == 'b' || c == 'g' || c == '#' || c == 'y' || c == 'x' || c == 'i' ){
+        Func();
+        otraFunc();
+        return;
+    }else{
+        errorSint("bg#yxi");
+        return;
+    }
+
 }
