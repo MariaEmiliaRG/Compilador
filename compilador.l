@@ -45,7 +45,7 @@ FILE *ptrTokens;
 int line = 1; 
 //Tener el registro de si el caracter previo tampoco ha sido reconocido, de este modo en el archivo de errores podemos mostrar la cadena completa 
 //y no caracter por caracter.
-int errorL = 0; 
+int error = 0; 
 
 //Variables para conocer cuántos elementos hemos almacenado en las tablas correspondientes. 
 //Para cadenas de texto
@@ -55,7 +55,12 @@ int cuentaSimbolos = 0;
 //Variable para llevar la cuenta de números reales reales
 int cuentaReales = 0; 
 
-char c = ' '; 
+//Variables utilizadas para el funcionamiento del analizador sintáctico
+char cadenaAtomos[2048];  // Longitud m�ximo del programa a analizar = 2048 atomos, 2 kilobytes de espacio en la memoria para atomos.
+int cuentaAtomos=0;
+int cuentaSintactica=0;
+//int errorSint = 0;
+char c;
 
 void newIdent(char *text);
 void nexConstCad(char *text);
@@ -119,7 +124,7 @@ void Llama();
 void arg(); 
 void otroArg(); 
 
-void error(); 
+void errorSint( char * errores); 
 
 
 //Para identificadores
@@ -427,11 +432,11 @@ válido o el fin de archivo
 La variable error nos ayuda a saber si el caracter previo tampoco fue reconocido, por ende este forma parte del mismo error. 
 */
 void sendError(char *text){
-  if (errorL)
+  if (error)
     fprintf(errorsFile, "%s", text);
   else{
     fprintf(errorsFile, "ERROR en la línea %d, no se reconoce %s", line, text);
-    errorL = 1; 
+    error = 1; 
   }   
   return; 
 }
@@ -441,8 +446,8 @@ En caso de encontrar un componente léxico válido es importante darle continuid
 hay que agregar un salto de línea en el archivo de errores, y tenemos que modificar la variable error a 0 (falso)
 */
 void checkError(){
-  if (errorL){
-    errorL = 0; 
+  if (error){
+    error = 0; 
     fprintf(errorsFile, "\n");
   }
   return; 
@@ -454,33 +459,33 @@ void checkError(){
 
 void V(){
   if( c == 'i' || c == 'n' || c == 'r' || c == 's')
-    c = getchar();
+    c = cadenaAtomos[cuentaSintactica++];
   else 
-    error();
+    errorSint("inrs");
   return; 
 }
 
 void VP(){
   if ( c == 'n' || c == 'i')
-    c = getchar(); 
+    c = cadenaAtomos[cuentaSintactica++]; 
   else 
-    error(); 
+    errorSint("ni"); 
   return; 
 }
 
 void VPP(){
   if ( c == 'r' || c == 'i' )
-    c = getchar(); 
+    c = cadenaAtomos[cuentaSintactica++]; 
   else 
-    error(); 
+    errorSint("ri"); 
   return; 
 }
 
 void VPPP(){
   if (c == 's' || c == 'i' )
-    c == getchar(); 
+    c = cadenaAtomos[cuentaSintactica++]; 
   else 
-    error(); 
+    errorSint("si"); 
   return; 
 }
 
@@ -500,9 +505,9 @@ void P(){
   else if (c == 'z')
     Devuelve();
   else if (c == 'c')
-    c = getchar();  
+    c = cadenaAtomos[cuentaSintactica++];  
   else 
-    error(); 
+    errorSint("ifhwj[zc"); 
   return; 
 }
 
@@ -513,114 +518,115 @@ void listaP(){
     P(); 
     listaP(); 
   }else 
-    error(); 
+    errorSint("}:tqaoifhwj[zc"); 
   return;
 }
 
 void W(){
   if (c == 'w'){
-    c = getchar(); 
+    c = cadenaAtomos[cuentaSintactica++]; 
     if (c == '('){
-      c = getchar();
+      c = cadenaAtomos[cuentaSintactica++];
       R(); 
       if (c == ')'){
-        c = getchar();
+        c = cadenaAtomos[cuentaSintactica++];
         if (c == 'm'){
-          c = getchar();
+          c = cadenaAtomos[cuentaSintactica++];
           if ( c == '{'){
-            c = getchar();
+            c = cadenaAtomos[cuentaSintactica++];
             listaP(); 
             if (c == '}')
-              c = getchar(); 
+              c = cadenaAtomos[cuentaSintactica++]; 
             else 
-              error();
+              errorSint("}");
           } else 
-            error();
+            errorSint("{");
         } else 
-          error(); 
+          errorSint("m"); 
       } else 
-        error();
+        errorSint(")");
     } else 
-      error();
-  }
+      errorSint("(");
+  } else 
+    errorSint("w"); 
   return; 
 }
 
 void I(){
   if (c == 'f'){
-    c = getchar();
+    c = cadenaAtomos[cuentaSintactica++];
     if (c == '('){
-      c = getchar(); 
+      c = cadenaAtomos[cuentaSintactica++]; 
       R(); 
       if (c == ')'){
-        c = getchar();
+        c = cadenaAtomos[cuentaSintactica++];
         listaP(); 
         IP(); 
         if (c == ':')
-          c = getchar(); 
+          c = cadenaAtomos[cuentaSintactica++]; 
         else 
-          error();  
+          errorSint(":");  
       } else 
-        error(); 
+        errorSint(")"); 
     } else 
-      error(); 
+      errorSint("("); 
   } else 
-    error(); 
+    errorSint("f"); 
 
   return; 
 }
 
 void IP(){
   if (c == 't'){
-    c = getchar(); 
+    c = cadenaAtomos[cuentaSintactica++]; 
     listaP(); 
   } else if (c == ':')
     return; 
   else 
-    error(); 
+    errorSint(":t"); 
   return; 
 }
 
 void J(){
   if (c == 'j'){
-    c = getchar(); 
+    c = cadenaAtomos[cuentaSintactica++]; 
     if (c == '('){
-      c = getchar(); 
+      c = cadenaAtomos[cuentaSintactica++]; 
       Y(); 
       X(); 
       Z(); 
       if (c == '{'){
-        c = getchar(); 
+        c = cadenaAtomos[cuentaSintactica++]; 
         listaP(); 
         if (c == '}')
-          c = getchar(); 
+          c = cadenaAtomos[cuentaSintactica++]; 
         else 
-          error(); 
+          errorSint("}"); 
       } else  
-        error(); 
+        errorSint("{"); 
     } else 
-      error(); 
+      errorSint("("); 
   } else 
-    error(); 
+    errorSint("j"); 
   return; 
 }
 
 void Y(){
   if (c == 'i'){
-    c = getchar();
+    c = cadenaAtomos[cuentaSintactica++];
     if (c == '='){
-      c = getchar(); 
+      c = cadenaAtomos[cuentaSintactica++]; 
       E(); 
       if (c == ')')
-        c = getchar(); 
+        c = cadenaAtomos[cuentaSintactica++]; 
       else 
-        error(); 
+        errorSint(")"); 
     } else
-      error();
+      errorSint("=");
   } else if (c == ';')
-    c = getchar(); 
+    c = cadenaAtomos[cuentaSintactica++]; 
   else 
-    error(); 
+    errorSint("i;"); 
   return; 
 }
 
@@ -628,121 +634,121 @@ void X(){
   if ( c == 'i' || c == 'n' || c == 'r' || c == 's'){
     R(); 
     if (c == ';')
-      c = getchar();
+      c = cadenaAtomos[cuentaSintactica++];
     else 
-      error(); 
+      errorSint(";"); 
   } else if (c == ';')
-    c = getchar(); 
+    c = cadenaAtomos[cuentaSintactica++]; 
   else 
-    error(); 
+    errorSint("inrs;"); 
   return; 
 }
 
 void Z(){
   if (c == 'i'){
-    c = getchar(); 
+    c = cadenaAtomos[cuentaSintactica++]; 
     if (c == '='){
-      c = getchar(); 
+      c = cadenaAtomos[cuentaSintactica++]; 
       E(); 
       if (c == ')')
-        c = getchar();
+        c = cadenaAtomos[cuentaSintactica++];
       else 
-        error(); 
+        errorSint(")"); 
     } else 
-      error(); 
+      errorSint("="); 
   } else if (c == ')')
-    c = getchar(); 
+    c = cadenaAtomos[cuentaSintactica++]; 
   else 
-    error(); 
+    errorSint("i)"); 
   return; 
 }
 
 void H(){
   if (c == 'h'){
-    c = getchar(); 
+    c = cadenaAtomos[cuentaSintactica++]; 
     if (c == '('){
-      c = getchar(); 
+      c = cadenaAtomos[cuentaSintactica++]; 
       if (c == 'i'){
-        c = getchar(); 
+        c = cadenaAtomos[cuentaSintactica++]; 
         if (c == ')'){
-          c = getchar(); 
+          c = cadenaAtomos[cuentaSintactica++]; 
           if (c == '{'){
-            c = getchar(); 
+            c = cadenaAtomos[cuentaSintactica++]; 
             CP(); 
             OP(); 
             if (c == '}')
-              c = getchar(); 
+              c = cadenaAtomos[cuentaSintactica++]; 
             else 
-              error(); 
+              errorSint("}"); 
           } else 
-            error(); 
+            errorSint("{"); 
         } else 
-          error(); 
+          errorSint(")"); 
       } else 
-        error(); 
+        errorSint("i"); 
     } else 
-      error(); 
+      errorSint("("); 
   } else 
-    error();
+    errorSint("h");
   return; 
 }
 
 void CP(){
   if (c == 'a'){
-    c = getchar(); 
+    c = cadenaAtomos[cuentaSintactica++]; 
     if (c == 'n'){
-      c = getchar(); 
+      c = cadenaAtomos[cuentaSintactica++]; 
       if (c == ':'){
-        c = getchar(); 
+        c = cadenaAtomos[cuentaSintactica++]; 
         listaP(); 
         U(); 
         CP(); 
       } else 
-        error(); 
+        errorSint(":"); 
     } else 
-      error(); 
+      errorSint("n"); 
   } else if (c == 'o' || c == '}')
     return; 
   else 
-    error(); 
+    errorSint("ao}"); 
   return; 
 }
 
 void OP(){
   if (c == 'o'){
-    c = getchar(); 
+    c = cadenaAtomos[cuentaSintactica++]; 
     if (c == ':'){
-      c = getchar(); 
+      c = cadenaAtomos[cuentaSintactica++]; 
       listaP(); 
     } else 
-      error(); 
+      errorSint(":"); 
   } else if (c == '}')
     return; 
   else 
-    error(); 
+    errorSint("o}"); 
   return; 
 }
 
 void U(){
   if (c == 'q')
-    c = getchar(); 
+    c = cadenaAtomos[cuentaSintactica++]; 
   else if ( c == 'a' || c == 'o' || c == '}') //+FDC
     return; 
   else 
-    error(); 
+    errorSint("qao}"); 
   return; 
 }
 
 void Devuelve(){
   if ( c == 'z'){
-    c = getchar(); 
+    c = cadenaAtomos[cuentaSintactica++]; 
     Devuelve(); 
     if (c == ';')
-      c = getchar(); 
+      c = cadenaAtomos[cuentaSintactica++]; 
     else
-      error(); 
+      errorSint(";"); 
   } else
-    error(); 
+    errorSint("z"); 
   return; 
 }
 
@@ -752,32 +758,32 @@ void valor(){
   else if (c == ')')
     return; 
   else 
-    error(); 
+    errorSint("inrs)"); 
   return; 
 }
 
 void Llama(){
   if (c == '['){
-    c = getchar(); 
+    c = cadenaAtomos[cuentaSintactica++]; 
     if (c == 'i'){
-      c = getchar(); 
+      c = cadenaAtomos[cuentaSintactica++]; 
       if ( c == '('){
-        c = getchar(); 
+        c = cadenaAtomos[cuentaSintactica++]; 
         arg(); 
         if (c == ')'){
-          c = getchar(); 
+          c = cadenaAtomos[cuentaSintactica++]; 
           if (c == ']')
-            c = getchar(); 
+            c = cadenaAtomos[cuentaSintactica++]; 
           else 
-            error(); 
+            errorSint("]"); 
         } else
-          error(); 
+          errorSint(")"); 
       } else 
-        error(); 
+        errorSint("("); 
     } else 
-      error();
+      errorSint("i");
   } else  
-    error(); 
+    errorSint("["); 
   return;
 }
 
@@ -788,22 +794,22 @@ void arg(){
     V(); 
     otroArg(); 
   } else
-    error(); 
+    errorSint(")inrs"); 
   return; 
 }
 
 void otroArg(){
   if ( c == ','){
-    c = getchar(); 
+    c = cadenaAtomos[cuentaSintactica++]; 
     V(); 
     otroArg(); 
   } else if (c == ')') // +FDC
     return; 
   else 
-    error(); 
+    errorSint(",)"); 
   return;
 }
 
-void error(){
+void errorSint(char *errores){
   return; 
 }
