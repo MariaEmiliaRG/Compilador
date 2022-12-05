@@ -45,7 +45,7 @@ FILE *ptrTokens;
 int line = 1; 
 //Tener el registro de si el caracter previo tampoco ha sido reconocido, de este modo en el archivo de errores podemos mostrar la cadena completa 
 //y no caracter por caracter.
-int error = 0; 
+int errorL = 0; 
 
 //Variables para conocer cuántos elementos hemos almacenado en las tablas correspondientes. 
 //Para cadenas de texto
@@ -54,6 +54,8 @@ int cuentaLiteralesCad=0;
 int cuentaSimbolos = 0;
 //Variable para llevar la cuenta de números reales reales
 int cuentaReales = 0; 
+
+char c = ' '; 
 
 void newIdent(char *text);
 void nexConstCad(char *text);
@@ -70,6 +72,54 @@ int agregarElemento(char *name);
 int buscarElemento(char *name);
 int catRelacionales(char *name);
 void imprimirArchivos();
+
+//Funciones del analizador sintáctico. 
+void Program(); 
+void otraFunc(); 
+void Func(); 
+void Param(); 
+void otroParam(); 
+void Cuerpo(); 
+void Decl(); 
+void D(); 
+void Tipo(); 
+void K(); 
+void Q(); 
+void N(); 
+void C(); 
+void A(); 
+void AP(); 
+void E(); 
+void EP(); 
+void T(); 
+void TP(); 
+void F(); 
+void R(); 
+void RP(); 
+void V(); 
+void VP(); 
+void VPP(); 
+void VPPP(); 
+void P(); 
+void listaP(); 
+void W(); 
+void I(); 
+void IP(); 
+void J(); 
+void Y(); 
+void X(); 
+void Z(); 
+void H(); 
+void CP(); 
+void OP(); 
+void U(); 
+void Devuelve(); 
+void Valor(); 
+void Llama(); 
+void arg(); 
+void otroArg(); 
+
+void error(); 
 
 
 //Para identificadores
@@ -377,11 +427,11 @@ válido o el fin de archivo
 La variable error nos ayuda a saber si el caracter previo tampoco fue reconocido, por ende este forma parte del mismo error. 
 */
 void sendError(char *text){
-  if (error)
+  if (errorL)
     fprintf(errorsFile, "%s", text);
   else{
     fprintf(errorsFile, "ERROR en la línea %d, no se reconoce %s", line, text);
-    error = 1; 
+    errorL = 1; 
   }   
   return; 
 }
@@ -391,9 +441,369 @@ En caso de encontrar un componente léxico válido es importante darle continuid
 hay que agregar un salto de línea en el archivo de errores, y tenemos que modificar la variable error a 0 (falso)
 */
 void checkError(){
-  if (error){
-    error = 0; 
+  if (errorL){
+    errorL = 0; 
     fprintf(errorsFile, "\n");
   }
+  return; 
+}
+
+//
+//ANALIZADOR SINTÁCTICO 
+//
+
+void V(){
+  if( c == 'i' || c == 'n' || c == 'r' || c == 's')
+    c = getchar();
+  else 
+    error();
+  return; 
+}
+
+void VP(){
+  if ( c == 'n' || c == 'i')
+    c = getchar(); 
+  else 
+    error(); 
+  return; 
+}
+
+void VPP(){
+  if ( c == 'r' || c == 'i' )
+    c = getchar(); 
+  else 
+    error(); 
+  return; 
+}
+
+void VPPP(){
+  if (c == 's' || c == 'i' )
+    c == getchar(); 
+  else 
+    error(); 
+  return; 
+}
+
+void P(){
+  if (c == 'i')
+    A(); 
+  else if (c == 'f')
+    I(); 
+  else if (c == 'h')
+    H(); 
+  else if (c == 'w')
+    W(); 
+  else if (c == 'j')
+    J(); 
+  else if (c == '[')
+    Llama(); 
+  else if (c == 'z')
+    Devuelve();
+  else if (c == 'c')
+    c = getchar();  
+  else 
+    error(); 
+  return; 
+}
+
+void listaP(){
+  if ( c == '}' || c == ':' || c == 't' || c == 'q' || c == 'a' || c == 'o' ) //+FDC
+    return; 
+  else if (c == 'i' || c == 'f' || c == 'h' || c == 'w' || c == 'j' || c == '[' || c == 'z' || c == 'c'){
+    P(); 
+    listaP(); 
+  }else 
+    error(); 
+  return;
+}
+
+void W(){
+  if (c == 'w'){
+    c = getchar(); 
+    if (c == '('){
+      c = getchar();
+      R(); 
+      if (c == ')'){
+        c = getchar();
+        if (c == 'm'){
+          c = getchar();
+          if ( c == '{'){
+            c = getchar();
+            listaP(); 
+            if (c == '}')
+              c = getchar(); 
+            else 
+              error();
+          } else 
+            error();
+        } else 
+          error(); 
+      } else 
+        error();
+    } else 
+      error();
+  }
+  return; 
+}
+
+void I(){
+  if (c == 'f'){
+    c = getchar();
+    if (c == '('){
+      c = getchar(); 
+      R(); 
+      if (c == ')'){
+        c = getchar();
+        listaP(); 
+        IP(); 
+        if (c == ':')
+          c = getchar(); 
+        else 
+          error();  
+      } else 
+        error(); 
+    } else 
+      error(); 
+  } else 
+    error(); 
+
+  return; 
+}
+
+void IP(){
+  if (c == 't'){
+    c = getchar(); 
+    listaP(); 
+  } else if (c == ':')
+    return; 
+  else 
+    error(); 
+  return; 
+}
+
+void J(){
+  if (c == 'j'){
+    c = getchar(); 
+    if (c == '('){
+      c = getchar(); 
+      Y(); 
+      X(); 
+      Z(); 
+      if (c == '{'){
+        c = getchar(); 
+        listaP(); 
+        if (c == '}')
+          c = getchar(); 
+        else 
+          error(); 
+      } else  
+        error(); 
+    } else 
+      error(); 
+  } else 
+    error(); 
+  return; 
+}
+
+void Y(){
+  if (c == 'i'){
+    c = getchar();
+    if (c == '='){
+      c = getchar(); 
+      E(); 
+      if (c == ')')
+        c = getchar(); 
+      else 
+        error(); 
+    } else
+      error();
+  } else if (c == ';')
+    c = getchar(); 
+  else 
+    error(); 
+  return; 
+}
+
+void X(){
+  if ( c == 'i' || c == 'n' || c == 'r' || c == 's'){
+    R(); 
+    if (c == ';')
+      c = getchar();
+    else 
+      error(); 
+  } else if (c == ';')
+    c = getchar(); 
+  else 
+    error(); 
+  return; 
+}
+
+void Z(){
+  if (c == 'i'){
+    c = getchar(); 
+    if (c == '='){
+      c = getchar(); 
+      E(); 
+      if (c == ')')
+        c = getchar();
+      else 
+        error(); 
+    } else 
+      error(); 
+  } else if (c == ')')
+    c = getchar(); 
+  else 
+    error(); 
+  return; 
+}
+
+void H(){
+  if (c == 'h'){
+    c = getchar(); 
+    if (c == '('){
+      c = getchar(); 
+      if (c == 'i'){
+        c = getchar(); 
+        if (c == ')'){
+          c = getchar(); 
+          if (c == '{'){
+            c = getchar(); 
+            CP(); 
+            OP(); 
+            if (c == '}')
+              c = getchar(); 
+            else 
+              error(); 
+          } else 
+            error(); 
+        } else 
+          error(); 
+      } else 
+        error(); 
+    } else 
+      error(); 
+  } else 
+    error();
+  return; 
+}
+
+void CP(){
+  if (c == 'a'){
+    c = getchar(); 
+    if (c == 'n'){
+      c = getchar(); 
+      if (c == ':'){
+        c = getchar(); 
+        listaP(); 
+        U(); 
+        CP(); 
+      } else 
+        error(); 
+    } else 
+      error(); 
+  } else if (c == 'o' || c == '}')
+    return; 
+  else 
+    error(); 
+  return; 
+}
+
+void OP(){
+  if (c == 'o'){
+    c = getchar(); 
+    if (c == ':'){
+      c = getchar(); 
+      listaP(); 
+    } else 
+      error(); 
+  } else if (c == '}')
+    return; 
+  else 
+    error(); 
+  return; 
+}
+
+void U(){
+  if (c == 'q')
+    c = getchar(); 
+  else if ( c == 'a' || c == 'o' || c == '}') //+FDC
+    return; 
+  else 
+    error(); 
+  return; 
+}
+
+void Devuelve(){
+  if ( c == 'z'){
+    c = getchar(); 
+    Devuelve(); 
+    if (c == ';')
+      c = getchar(); 
+    else
+      error(); 
+  } else
+    error(); 
+  return; 
+}
+
+void valor(){
+  if (c == 'i' || c == 'n' || c == 'r' || c == 's')
+    V(); 
+  else if (c == ')')
+    return; 
+  else 
+    error(); 
+  return; 
+}
+
+void Llama(){
+  if (c == '['){
+    c = getchar(); 
+    if (c == 'i'){
+      c = getchar(); 
+      if ( c == '('){
+        c = getchar(); 
+        arg(); 
+        if (c == ')'){
+          c = getchar(); 
+          if (c == ']')
+            c = getchar(); 
+          else 
+            error(); 
+        } else
+          error(); 
+      } else 
+        error(); 
+    } else 
+      error();
+  } else  
+    error(); 
+  return;
+}
+
+void arg(){
+  if (c == ')')
+    return; 
+  else if (c == 'i' || c == 'n' || c == 'r' || c == 's'){
+    V(); 
+    otroArg(); 
+  } else
+    error(); 
+  return; 
+}
+
+void otroArg(){
+  if ( c == ','){
+    c = getchar(); 
+    V(); 
+    otroArg(); 
+  } else if (c == ')') // +FDC
+    return; 
+  else 
+    error(); 
+  return;
+}
+
+void error(){
   return; 
 }
