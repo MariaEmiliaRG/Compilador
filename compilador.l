@@ -82,37 +82,54 @@ int buscarElemento(char *name);
 int catRelacionales(char *name);
 void imprimirArchivos();
 
-//Funciones utilizadas para el analizador sintáctico
+//Funciones del analizador sintáctico. 
+void Program(); 
+void otraFunc(); 
+void Func(); 
+void Param(); 
+void otroParam(); 
+void Cuerpo(); 
+void Decl(); 
+void D(); 
+void Tipo(); 
+void K(); 
+void Q(); 
+void N(); 
+void C(); 
+void A(); 
+void AP(); 
+void E(); 
+void EP(); 
+void T(); 
+void TP(); 
+void F(); 
+void R(); 
+void RP(); 
+void V(); 
+void VP(); 
+void VPP(); 
+void VPPP(); 
+void P(); 
+void listaP(); 
+void W(); 
+void I(); 
+void IP(); 
+void J(); 
+void Y(); 
+void X(); 
+void Z(); 
+void H(); 
+void CP(); 
+void OP(); 
+void U(); 
+void Devuelve(); 
+void Valor(); 
+void Llama(); 
+void arg(); 
+void otroArg(); 
 
-void errorSint(char *errores);
-void Program();
-void otraFunc();
-void Func();
-void Param();
-void otroParam();
-void Cuerpo();
-void Decl();
-void D();
-void Tipo();
-void K();
-void Q();
-void N();
-void C();
-void A();
-void AP();
-void E();
-void EP();
-void T();
-void TP();
-void F();
-void R();
-void RP();
-void listaP();
-void llama();
-void V();
-void VP();
-void VPP();
-void VPPP();
+void errorSint( char * errores); 
+
 
 //Para identificadores
 //La estructura de lista utilizada para crear la tabla de simbolos
@@ -189,6 +206,9 @@ int main(int argn, char* arg[]){
       
       //Inicio de identificación de los componentes léxicos.
       yylex();
+
+      c = cadenaAtomos[cuentaSintactica++];
+      Program(); 
 
       //Cerrando archivos
       fclose(ptrSimbolos);
@@ -569,7 +589,7 @@ void sendError(char *text){
   if (error)
     fprintf(errorsFile, "%s", text);
   else{
-    fprintf(errorsFile, "ERROR en la línea %d, no se reconoce %s", line, text);
+    fprintf(errorsFile, "ERROR LEXICO, en la línea %d, no se reconoce %s", line, text);
     error = 1; 
   }   
   return; 
@@ -591,7 +611,7 @@ void checkError(){
 
 void errorSint(char *errores){
     errorSintactico++;
-    fprintf(errorsFile, "Error Sintactico, en atomo numero %d, valor %c, se eperaba: '%s' \n", cuentaSintactica, c, errores);
+    fprintf(errorsFile, "ERROR SINTACTICO, en atomo numero %d, valor %c, se eperaba: '%s' \n", cuentaSintactica, c, errores);
     c = cadenaAtomos[cuentaSintactica++];
 }
 
@@ -920,6 +940,7 @@ void F(){
         }else{
              errorSint(")");
             
+
         }
 
         return;
@@ -927,7 +948,7 @@ void F(){
         c = cadenaAtomos[cuentaSintactica++];
 
     }else if(c=='['){
-        llama();
+        Llama();
     }else{
         errorSint("(inr");
     }
@@ -970,11 +991,355 @@ void RP(){
     return;
 }
 
+void V(){
+  if( c == 'i' || c == 'n' || c == 'r' || c == 's')
+    c = cadenaAtomos[cuentaSintactica++];
+  else 
+    errorSint("inrs");
+  return; 
+}
 
-//Las declaré para evitar warnings en mi compilación
-void listaP(){}
-void llama(){}
-void V(){}
-void VP(){}
-void VPP(){}
-void VPPP(){}
+void VP(){
+  if ( c == 'n' || c == 'i')
+    c = cadenaAtomos[cuentaSintactica++]; 
+  else 
+    errorSint("ni"); 
+  return; 
+}
+
+void VPP(){
+  if ( c == 'r' || c == 'i' )
+    c = cadenaAtomos[cuentaSintactica++]; 
+  else 
+    errorSint("ri"); 
+  return; 
+}
+
+void VPPP(){
+  if (c == 's' || c == 'i' )
+    c = cadenaAtomos[cuentaSintactica++]; 
+  else 
+    errorSint("si"); 
+  return; 
+}
+
+void P(){
+  if (c == 'i')
+    A(); 
+  else if (c == 'f')
+    I(); 
+  else if (c == 'h')
+    H(); 
+  else if (c == 'w')
+    W(); 
+  else if (c == 'j')
+    J(); 
+  else if (c == '[')
+    Llama(); 
+  else if (c == 'z')
+    Devuelve();
+  else if (c == 'c')
+    c = cadenaAtomos[cuentaSintactica++];  
+  else 
+    errorSint("ifhwj[zc"); 
+  return; 
+}
+
+void listaP(){
+  if ( c == '}' || c == ':' || c == 't' || c == 'q' || c == 'a' || c == 'o' ) //+FDC
+    return; 
+  else if (c == 'i' || c == 'f' || c == 'h' || c == 'w' || c == 'j' || c == '[' || c == 'z' || c == 'c'){
+    P(); 
+    listaP(); 
+  }else 
+    errorSint("}:tqaoifhwj[zc"); 
+  return;
+}
+
+void W(){
+  if (c == 'w'){
+    c = cadenaAtomos[cuentaSintactica++]; 
+    if (c == '('){
+      c = cadenaAtomos[cuentaSintactica++];
+      R(); 
+      if (c == ')'){
+        c = cadenaAtomos[cuentaSintactica++];
+        if (c == 'm'){
+          c = cadenaAtomos[cuentaSintactica++];
+          if ( c == '{'){
+            c = cadenaAtomos[cuentaSintactica++];
+            listaP(); 
+            if (c == '}')
+              c = cadenaAtomos[cuentaSintactica++]; 
+            else 
+              errorSint("}");
+          } else 
+            errorSint("{");
+        } else 
+          errorSint("m"); 
+      } else 
+        errorSint(")");
+    } else 
+      errorSint("(");
+  } else 
+    errorSint("w"); 
+  return; 
+}
+
+void I(){
+  if (c == 'f'){
+    c = cadenaAtomos[cuentaSintactica++];
+    if (c == '('){
+      c = cadenaAtomos[cuentaSintactica++]; 
+      R(); 
+      if (c == ')'){
+        c = cadenaAtomos[cuentaSintactica++];
+        listaP(); 
+        IP(); 
+        if (c == ':')
+          c = cadenaAtomos[cuentaSintactica++]; 
+        else 
+          errorSint(":");  
+      } else 
+        errorSint(")"); 
+    } else 
+      errorSint("("); 
+  } else 
+    errorSint("f"); 
+
+  return; 
+}
+
+void IP(){
+  if (c == 't'){
+    c = cadenaAtomos[cuentaSintactica++]; 
+    listaP(); 
+  } else if (c == ':')
+    return; 
+  else 
+    errorSint(":t"); 
+  return; 
+}
+
+void J(){
+  if (c == 'j'){
+    c = cadenaAtomos[cuentaSintactica++]; 
+    if (c == '('){
+      c = cadenaAtomos[cuentaSintactica++]; 
+      Y(); 
+      X(); 
+      Z(); 
+      if (c == '{'){
+        c = cadenaAtomos[cuentaSintactica++]; 
+        listaP(); 
+        if (c == '}')
+          c = cadenaAtomos[cuentaSintactica++]; 
+        else 
+          errorSint("}"); 
+      } else  
+        errorSint("{"); 
+    } else 
+      errorSint("("); 
+  } else 
+    errorSint("j"); 
+  return; 
+}
+
+void Y(){
+  if (c == 'i'){
+    c = cadenaAtomos[cuentaSintactica++];
+    if (c == '='){
+      c = cadenaAtomos[cuentaSintactica++]; 
+      E(); 
+      if (c == ')')
+        c = cadenaAtomos[cuentaSintactica++]; 
+      else 
+        errorSint(")"); 
+    } else
+      errorSint("=");
+  } else if (c == ';')
+    c = cadenaAtomos[cuentaSintactica++]; 
+  else 
+    errorSint("i;"); 
+  return; 
+}
+
+void X(){
+  if ( c == 'i' || c == 'n' || c == 'r' || c == 's'){
+    R(); 
+    if (c == ';')
+      c = cadenaAtomos[cuentaSintactica++];
+    else 
+      errorSint(";"); 
+  } else if (c == ';')
+    c = cadenaAtomos[cuentaSintactica++]; 
+  else 
+    errorSint("inrs;"); 
+  return; 
+}
+
+void Z(){
+  if (c == 'i'){
+    c = cadenaAtomos[cuentaSintactica++]; 
+    if (c == '='){
+      c = cadenaAtomos[cuentaSintactica++]; 
+      E(); 
+      if (c == ')')
+        c = cadenaAtomos[cuentaSintactica++];
+      else 
+        errorSint(")"); 
+    } else 
+      errorSint("="); 
+  } else if (c == ')')
+    c = cadenaAtomos[cuentaSintactica++]; 
+  else 
+    errorSint("i)"); 
+  return; 
+}
+
+void H(){
+  if (c == 'h'){
+    c = cadenaAtomos[cuentaSintactica++]; 
+    if (c == '('){
+      c = cadenaAtomos[cuentaSintactica++]; 
+      if (c == 'i'){
+        c = cadenaAtomos[cuentaSintactica++]; 
+        if (c == ')'){
+          c = cadenaAtomos[cuentaSintactica++]; 
+          if (c == '{'){
+            c = cadenaAtomos[cuentaSintactica++]; 
+            CP(); 
+            OP(); 
+            if (c == '}')
+              c = cadenaAtomos[cuentaSintactica++]; 
+            else 
+              errorSint("}"); 
+          } else 
+            errorSint("{"); 
+        } else 
+          errorSint(")"); 
+      } else 
+        errorSint("i"); 
+    } else 
+      errorSint("("); 
+  } else 
+    errorSint("h");
+  return; 
+}
+
+void CP(){
+  if (c == 'a'){
+    c = cadenaAtomos[cuentaSintactica++]; 
+    if (c == 'n'){
+      c = cadenaAtomos[cuentaSintactica++]; 
+      if (c == ':'){
+        c = cadenaAtomos[cuentaSintactica++]; 
+        listaP(); 
+        U(); 
+        CP(); 
+      } else 
+        errorSint(":"); 
+    } else 
+      errorSint("n"); 
+  } else if (c == 'o' || c == '}')
+    return; 
+  else 
+    errorSint("ao}"); 
+  return; 
+}
+
+void OP(){
+  if (c == 'o'){
+    c = cadenaAtomos[cuentaSintactica++]; 
+    if (c == ':'){
+      c = cadenaAtomos[cuentaSintactica++]; 
+      listaP(); 
+    } else 
+      errorSint(":"); 
+  } else if (c == '}')
+    return; 
+  else 
+    errorSint("o}"); 
+  return; 
+}
+
+void U(){
+  if (c == 'q')
+    c = cadenaAtomos[cuentaSintactica++]; 
+  else if ( c == 'a' || c == 'o' || c == '}') //+FDC
+    return; 
+  else 
+    errorSint("qao}"); 
+  return; 
+}
+
+void Devuelve(){
+  if ( c == 'z'){
+    c = cadenaAtomos[cuentaSintactica++]; 
+    Devuelve(); 
+    if (c == ';')
+      c = cadenaAtomos[cuentaSintactica++]; 
+    else
+      errorSint(";"); 
+  } else
+    errorSint("z"); 
+  return; 
+}
+
+void valor(){
+  if (c == 'i' || c == 'n' || c == 'r' || c == 's')
+    V(); 
+  else if (c == ')')
+    return; 
+  else 
+    errorSint("inrs)"); 
+  return; 
+}
+
+void Llama(){
+  if (c == '['){
+    c = cadenaAtomos[cuentaSintactica++]; 
+    if (c == 'i'){
+      c = cadenaAtomos[cuentaSintactica++]; 
+      if ( c == '('){
+        c = cadenaAtomos[cuentaSintactica++]; 
+        arg(); 
+        if (c == ')'){
+          c = cadenaAtomos[cuentaSintactica++]; 
+          if (c == ']')
+            c = cadenaAtomos[cuentaSintactica++]; 
+          else 
+            errorSint("]"); 
+        } else
+          errorSint(")"); 
+      } else 
+        errorSint("("); 
+    } else 
+      errorSint("i");
+  } else  
+    errorSint("["); 
+  return;
+}
+
+void arg(){
+  if (c == ')')
+    return; 
+  else if (c == 'i' || c == 'n' || c == 'r' || c == 's'){
+    V(); 
+    otroArg(); 
+  } else
+    errorSint(")inrs"); 
+  return; 
+}
+
+void otroArg(){
+  if ( c == ','){
+    c = cadenaAtomos[cuentaSintactica++]; 
+    V(); 
+    otroArg(); 
+  } else if (c == ')') // +FDC
+    return; 
+  else 
+    errorSint(",)"); 
+  return;
+}
