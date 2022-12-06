@@ -62,7 +62,7 @@ int cuentaReales = 0;
 char cadenaAtomos[2048];  // Longitud m�ximo del programa a analizar = 2048 atomos, 2 kilobytes de espacio en la memoria para atomos.
 int cuentaAtomos=0;
 int cuentaSintactica=0;
-int errorSint = 0;
+int errorSintactico = 0;
 char c;
 
 void newIdent(char *text);
@@ -70,6 +70,7 @@ void nexConstCad(char *text);
 void newSpecial(char *text);
 void newOpRel(char *text);
 void newOpArit(char *text);
+void newChar(char *text);
 void newOpAsig();
 void newFloat(char *text);
 void newInteger(char *text);
@@ -83,7 +84,7 @@ void imprimirArchivos();
 
 //Funciones utilizadas para el analizador sintáctico
 
-void errorSint();
+void errorSint(char *errores);
 void Program();
 void otraFunc();
 void Func();
@@ -106,6 +107,12 @@ void TP();
 void F();
 void R();
 void RP();
+void listaP();
+void llama();
+void V();
+void VP();
+void VPP();
+void VPPP();
 
 //Para identificadores
 //La estructura de lista utilizada para crear la tabla de simbolos
@@ -144,7 +151,7 @@ nextLine   \n
 {floatn}    {checkError(); newFloat(yytext);}
 {integern}  {checkError(); newInteger(yytext);}
 {constCad}  {checkError(); nexConstCad(yytext);}
-{carac}     {checkError(); newChar(yytext)}
+{carac}     {checkError(); newChar(yytext);}
 {special}   {checkError(); newSpecial(yytext);}
 {opRel}     {checkError(); newOpRel(yytext);}
 {opArit}    {checkError(); newOpArit(yytext);}
@@ -264,11 +271,11 @@ int catRelacionales(char *operador){
 	cuentaAtomos++;
     return 1;
   }else if(strcmp(operador, "<=") == 0){
-    adenaAtomos[cuentaAtomos]='l';
+    cadenaAtomos[cuentaAtomos]='l';
 	cuentaAtomos++;
     return 2;
   }else if(strcmp(operador, ">=") == 0){
-    adenaAtomos[cuentaAtomos]='u';
+    cadenaAtomos[cuentaAtomos]='u';
 	cuentaAtomos++;
     return 3;
   }else if(strcmp(operador, "==") == 0){
@@ -276,7 +283,7 @@ int catRelacionales(char *operador){
 	cuentaAtomos++;
     return 4;
   }else if(strcmp(operador, "!=") == 0){
-    adenaAtomos[cuentaAtomos]='d';
+    cadenaAtomos[cuentaAtomos]='d';
 	cuentaAtomos++;
     return 5;
   }else{
@@ -398,7 +405,7 @@ void newOpArit(char *text){
         cadenaAtomos[cuentaAtomos]='-';
         cuentaAtomos++;
     break;
-    case: '*':
+    case '*':
         cadenaAtomos[cuentaAtomos]='*';
         cuentaAtomos++;
     break;
@@ -548,7 +555,7 @@ void nexConstCad(char *text){
 }
 
 void newChar(char *text){
-  fprintf(ptrTokens, "(4,%c)\n", text);
+  fprintf(ptrTokens, "(4,%c)\n", text[0]);
   cadenaAtomos[cuentaAtomos]='s';
   cuentaAtomos++;
 }
@@ -583,20 +590,391 @@ void checkError(){
 //Funciones utilizadas para el analizador sintáctico
 
 void errorSint(char *errores){
-    errorSint++;
+    errorSintactico++;
     fprintf(errorsFile, "Error Sintactico, en atomo numero %d, valor %c, se eperaba: '%s' \n", cuentaSintactica, c, errores);
     c = cadenaAtomos[cuentaSintactica++];
 }
 
 void Program(){
     c = cadenaAtomos[cuentaSintactica++];
-    if(c == 'b' || c == 'g' || c == '#' || c == 'y' || c == 'x' || c == 'i' ){
+    if(c == 'b' || c == 'g' || c == '#' || c == 'y' || c == 'x'){
         Func();
         otraFunc();
         return;
     }else{
-        errorSint("bg#yxi");
+        errorSint("bg#yx");
         return;
     }
 
 }
+//_ no se ocupa, se usará como fin de cadena
+void otraFunc(){
+  c = cadenaAtomos[cuentaSintactica++];
+  if(c == 'b' || c == 'g' || c == '#' || c == 'y' || c == 'x'){
+    Func();
+    otraFunc();
+    return;
+  }else if(c == '\0'){
+    return;
+  }else{
+    errorSint("bg#yx");
+    return;
+  }
+}
+
+void Func(){
+  c = cadenaAtomos[cuentaSintactica++];
+  if(c == 'b' || c == 'g' || c == '#' || c == 'y' || c == 'x'){
+    Tipo();
+    if(c == 'i'){
+      c = cadenaAtomos[cuentaSintactica++];
+    }else{
+      errorSint("i");
+    }
+    Param();
+    if(c == '{'){
+      c = cadenaAtomos[cuentaSintactica++];
+    }else{
+      errorSint("{");
+    }
+    Cuerpo();
+    if(c == '}'){
+      c = cadenaAtomos[cuentaSintactica++];
+    }else{
+      errorSint("}");
+    }
+    return;
+  }else{
+    errorSint("bg#yx");
+    return;
+  }
+}
+
+void Param(){
+  c = cadenaAtomos[cuentaSintactica++];
+  if(c == 'b' || c == 'g' || c == '#' || c == 'y' || c == 'x'){
+    Tipo();
+    if(c == 'i'){
+      c = cadenaAtomos[cuentaSintactica++];
+    }else{
+      errorSint("i");
+    }
+    otroParam();
+    return;
+  }else if(c == ')'){
+    return;
+  }else{
+    errorSint("bg#yx)");
+    return;
+  }
+}
+
+void otroParam(){
+  c = cadenaAtomos[cuentaSintactica++];
+  if(c == ','){
+    c = cadenaAtomos[cuentaSintactica++];
+    Tipo();
+    if(c == 'i'){
+      c = cadenaAtomos[cuentaSintactica++];
+    }else{
+      errorSint("i");
+    }
+    otroParam();
+    return;
+  }else if(c == ')'){
+    return;
+  }else{
+    errorSint(",)");
+    return;
+  }
+}
+
+void Cuerpo(){
+  c = cadenaAtomos[cuentaSintactica++];
+  if( c == '}' || c == 'b' || c == 'g' || c == '#' || c == 'y' || c == 'x' || c == 'i' || c == 'f' || c == 'h' || c == 'w' || c == 'j' || c == '['|| c == 'z'|| c == 'c'){
+    Decl();
+    listaP();
+    return;
+  }else{
+    errorSint("}bg#yxifhwj[zc");
+    return;
+  }
+
+}
+
+void Decl(){
+  c = cadenaAtomos[cuentaSintactica++];
+  if(c == 'i' || c == 'f' || c ==  'h' || c == 'w' || c == 'j' || c == '[' || c == 'z' || c == 'c' || c == '}'){
+    return;
+  }else if(c == 'b' || c == 'g' || c == '#' || c == 'y' || c == 'x'){
+    if(c == 'D'){
+      c = cadenaAtomos[cuentaSintactica++];
+    }else{
+      errorSint("D");
+    }
+    Decl();
+    return;
+  }else{
+    errorSint("ifhwj[zc}bg#yx");
+    return;
+  }
+}
+
+void D(){
+  c = cadenaAtomos[cuentaSintactica++];
+  if(c == 'b' || c == 'g' || c == '#' || c == 'y' || c == 'x'){
+    Tipo();
+    if(c == 'K'){
+      c = cadenaAtomos[cuentaSintactica++];
+    }else{
+      errorSint("K");
+    }
+    return;
+  }else{
+    errorSint("bg#yx");
+    return;
+  }
+}
+
+void Tipo(){
+  c = cadenaAtomos[cuentaSintactica++];
+  if(c == 'b'){
+    c = cadenaAtomos[cuentaSintactica++];
+    return;
+  }else if(c == 'g'){
+    c = cadenaAtomos[cuentaSintactica++];
+    return;
+  }else if(c == '#'){
+    c = cadenaAtomos[cuentaSintactica++];
+    return;
+  }else if(c == 'y'){
+    c = cadenaAtomos[cuentaSintactica++];
+    return;
+  }else if(c == 'x'){
+    c = cadenaAtomos[cuentaSintactica++];
+    return;
+  }else{
+    errorSint("bg#yx");
+    return;
+  }
+}
+
+void K(){
+  c = cadenaAtomos[cuentaSintactica++];
+  if(c == 'i'){
+    c = cadenaAtomos[cuentaSintactica++];
+    Q();
+    return;
+  }else{
+    errorSint("i");
+    return;
+  }
+}
+
+void Q(){
+  c = cadenaAtomos[cuentaSintactica++];
+  if( c == ';'){
+    return;
+  }else if( c == '='){
+    c = cadenaAtomos[cuentaSintactica++];
+    N();
+    C();
+    return;
+  }else if(c == ','){
+    c = cadenaAtomos[cuentaSintactica++];
+    K();
+    return;
+  }else{
+    errorSint(";=,");
+    return;
+  }
+}
+
+void N(){
+  c = cadenaAtomos[cuentaSintactica++];
+  if(c == 'n'){
+    c = cadenaAtomos[cuentaSintactica++];
+    return;
+  }else if(c == 'r'){
+    c = cadenaAtomos[cuentaSintactica++];
+    return;
+  }else if(c == 's'){
+    c = cadenaAtomos[cuentaSintactica++];
+    return;
+  }else{
+    errorSint("nrs");
+    return;
+  }
+}
+
+void C(){
+  c = cadenaAtomos[cuentaSintactica++];
+  if(c == ';'){
+    return;
+  }else if(c == ','){
+    c = cadenaAtomos[cuentaSintactica++];
+    K();
+    return;
+  }else{
+    errorSint(";,");
+    return;
+  }
+}
+
+void A(){
+  c = cadenaAtomos[cuentaSintactica++];
+  if(c == 'i'){
+    c = cadenaAtomos[cuentaSintactica++];
+    if(c == '='){
+      c = cadenaAtomos[cuentaSintactica++];
+    }else{
+      errorSint("=");
+    }
+    AP();
+    if(c == ';'){
+      c = cadenaAtomos[cuentaSintactica++];
+    }else{
+      errorSint(";");
+    }
+    return;
+  }else{
+    errorSint("is");
+    return;                        
+}
+}
+void AP(){
+  c = cadenaAtomos[cuentaSintactica++];
+  if(c == 's'){
+    c = cadenaAtomos[cuentaSintactica++];
+    return;
+  }else if(c == '(' || c == 'i' || c == 'n' || c == 'r' || c == '['){
+      E();
+      return;
+  }else{
+    errorSint("s(inr[");
+    return;
+  }
+}
+
+void E(){
+    c = cadenaAtomos[cuentaSintactica++];
+    if(c=='('||c=='i'||c=='n'||c=='r'||c=='['){
+        T();
+        EP();
+        return;
+    }else{
+      errorSint("(inr[");
+    }
+}
+
+void EP(){
+    c = cadenaAtomos[cuentaSintactica++];
+    if(c=='+' || c=='-'){
+        c = cadenaAtomos[cuentaSintactica++];
+        T();
+        EP();
+    }else if(c==';' || c==')'){
+        return;
+    }else{
+        errorSint("+-;)");
+    }
+    return;
+
+
+}
+
+void T(){
+    c = cadenaAtomos[cuentaSintactica++];
+    if(c=='('||c=='i'||c=='n'||c=='r'||c=='['){
+      F();
+      TP();
+    }else{
+       errorSint("(inr[");
+    }
+
+     return;
+}
+
+
+void TP(){
+    c = cadenaAtomos[cuentaSintactica++];
+    if(c=='*'||c=='/'||c=='\\'||c=='%'||c=='^'){
+        F();
+        TP();
+    }else if(c==';'||c==')'||c=='+'||c=='-'){
+        return;
+
+    }else{
+      errorSint("%*/\\^;)+-");
+    }
+}
+
+
+void F(){
+    c = cadenaAtomos[cuentaSintactica++];
+    if(c=='('){
+        c = cadenaAtomos[cuentaSintactica++];
+        E();
+        if(c==')'){
+            c = cadenaAtomos[cuentaSintactica++];
+        }else{
+             errorSint(")");
+            
+        }
+
+        return;
+    }else if(c=='i'||c=='n'||c=='r'){
+        c = cadenaAtomos[cuentaSintactica++];
+
+    }else if(c=='['){
+        llama();
+    }else{
+        errorSint("(inr");
+    }
+
+    return;
+}
+
+void R(){
+    c = cadenaAtomos[cuentaSintactica++];
+    if(c=='i'){
+        c = cadenaAtomos[cuentaSintactica++];
+        RP();
+        V();
+    }else if(c=='n'){
+        c = cadenaAtomos[cuentaSintactica++];
+        RP();
+        VP();
+    }else if(c=='r'){
+        c = cadenaAtomos[cuentaSintactica++];
+        RP();
+        VPP();
+    }else if(c=='s'){
+        c = cadenaAtomos[cuentaSintactica++];
+        RP();
+        VPPP();
+    }else{
+      errorSint("inrs");
+    }
+
+    return;
+}
+
+void RP(){
+    c = cadenaAtomos[cuentaSintactica++];
+    if(c=='>'||c=='<'||c=='l'||c=='e'||c=='d'||c=='u'){
+        c = cadenaAtomos[cuentaSintactica++];
+    }else{
+        errorSint("><ledu");
+    }
+    return;
+}
+
+
+//Las declaré para evitar warnings en mi compilación
+void listaP(){}
+void llama(){}
+void V(){}
+void VP(){}
+void VPP(){}
+void VPPP(){}
