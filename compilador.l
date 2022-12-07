@@ -130,7 +130,7 @@ void Llama();
 void arg(); 
 void otroArg(); 
 
-void errorSint( char * errores); 
+void errorSint( char * errores, char * produccion); 
 
 
 //Para identificadores
@@ -634,10 +634,12 @@ void checkError(){
 
 //Funciones utilizadas para el analizador sintáctico
 
-void errorSint(char *errores){
+void errorSint(char *errores, char * produccion){
     errorSintactico++;
     fprintf(errorsFile, "ERROR SINTACTICO, en atomo numero %d, valor %c, se eperaba alguno de estos valores: '%s' \n", cuentaSintactica, c, errores);
     c = cadenaAtomos[cuentaSintactica++];
+
+    fprintf(errorsFile, "PRODUCCIÓN -> %s\n", produccion);
 }
 
 void Program(){
@@ -646,7 +648,7 @@ void Program(){
         otraFunc();
         return;
     }else{
-        errorSint("bg#yx");
+        errorSint("bg#yx", "Program");
         return;
     }
 }
@@ -659,7 +661,7 @@ void otraFunc(){
   }else if(c == '-'){
     return;
   }else{
-    errorSint("bg#yx-");
+    errorSint("bg#yx-", "otraFunc");
     return;
   }
 }
@@ -681,23 +683,23 @@ void Func(){
                     c = cadenaAtomos[cuentaSintactica++];
                     return;
                     }else{
-                        errorSint("}");
+                        errorSint("}", "Func");
                     }  
             }else{
-                errorSint("{");
+                errorSint("{", "Func");
             }
         }else{
-        errorSint(")");
+        errorSint(")", "Func");
       }
       }else{
-        errorSint("(");
+        errorSint("(", "Func");
       }
     }else{
-      errorSint("i");
+      errorSint("i", "Func");
     }
 
   }else{
-    errorSint("bg#yx");
+    errorSint("bg#yx", "Func");
     return;
   }
 }
@@ -710,13 +712,13 @@ void Param(){
       otroParam();
       return;
     }else{
-      errorSint("i");
+      errorSint("i", "Param");
     }
     return;
   }else if(c == ')'){
     return;
   }else{
-    errorSint("bg#yx)");
+    errorSint("bg#yx)", "Param");
     return;
   }
 }
@@ -729,12 +731,12 @@ void otroParam(){
       c = cadenaAtomos[cuentaSintactica++];
       otroParam();
     }else{
-      errorSint("i");
+      errorSint("i", "otroParam");
     }
   }else if(c == ')'){
     return;
   }else{
-    errorSint(",)");
+    errorSint(",)", "otroParam");
     return;
   }
 }
@@ -746,7 +748,7 @@ void Cuerpo(){
     listaP();
     return;
   }else{
-    errorSint("}bg#yxifhwj[zc");
+    errorSint("}bg#yxifhwj[zc", "Cuerpo");
     return;
   }
 }
@@ -759,7 +761,7 @@ void Decl(){
     Decl();
     return;
   }else{
-    errorSint("ifhwj[zc}bg#yx");
+    errorSint("ifhwj[zc}bg#yx", "Decl");
     return;
   }
 }
@@ -772,10 +774,10 @@ void D(){
       c = cadenaAtomos[cuentaSintactica++];
       return;
     }else{
-      errorSint(";");
+      errorSint(";", "D");
     }
   }else{
-    errorSint("bg#yx");
+    errorSint("bg#yx", "D");
     return;
   }
 }
@@ -797,7 +799,7 @@ void Tipo(){
     c = cadenaAtomos[cuentaSintactica++];
     return;
   }else{
-    errorSint("bg#yx");
+    errorSint("bg#yx", "Tipo");
     return;
   }
 }
@@ -808,7 +810,7 @@ void K(){
     Q();
     return;
   }else{
-    errorSint("i");
+    errorSint("i", "K");
     return;
   }
 }
@@ -826,7 +828,7 @@ void Q(){
     K();
     return;
   }else{
-    errorSint(";=,");
+    errorSint(";=,", "Q");
     return;
   }
 }
@@ -842,7 +844,7 @@ void N(){
     c = cadenaAtomos[cuentaSintactica++];
     return;
   }else{
-    errorSint("nrs");
+    errorSint("nrs", "N");
     return;
   }
 }
@@ -855,7 +857,7 @@ void C(){
     K();
     return;
   }else{
-    errorSint(";,");
+    errorSint(";,", "C");
     return;
   }
 }
@@ -870,14 +872,14 @@ void A(){
         c = cadenaAtomos[cuentaSintactica++];
         return;
       }else{
-        errorSint(";");
+        errorSint(";", "A");
       }
     }else{
-      errorSint("=");
+      errorSint("=", "A");
       return;
     }
   }else{
-    errorSint("i");
+    errorSint("i", "A");
     return;                        
   }
 }
@@ -891,7 +893,7 @@ void AP(){
       E();
       return;
   }else{
-    errorSint("s(inr[");
+    errorSint("s(inr[", "AP");
     return;
   }
 }
@@ -902,7 +904,7 @@ void E(){
         EP();
         return;
     }else{
-      errorSint("(inr[");
+      errorSint("(inr[", "E");
     }
 }
 
@@ -914,7 +916,7 @@ void EP(){
   }else if(c==';' || c==')'){
     return;
   }else{
-      errorSint("+-;)");
+      errorSint("+-;)", "EP");
   }
   return;
 }
@@ -925,7 +927,7 @@ void T(){
       TP();
       return;
     }else{
-       errorSint("(inr[");
+       errorSint("(inr[", "T");
     }
      return;
 }
@@ -939,7 +941,7 @@ void TP(){
     }else if(c==';'||c==')'||c=='+'||c=='-'){
         return;
     }else{
-      errorSint("%%*/\\^;)+-");
+      errorSint("%%*/\\^;)+-", "TP");
     }
 }
 
@@ -952,7 +954,7 @@ void F(){
       c = cadenaAtomos[cuentaSintactica++];
       return;
     }else{
-      errorSint(")");
+      errorSint(")", "F");
     }
     return;
   }else if(c=='i'||c=='n'||c=='r'){
@@ -962,7 +964,7 @@ void F(){
     Llama();
     return;
   }else{
-    errorSint("(inr");
+    errorSint("(inr", "F");
   }
   return;
 }
@@ -989,7 +991,7 @@ void R(){
     VPPP();
     return;
   }else{
-    errorSint("inrs");
+    errorSint("inrs", "R");
     return;
   }
     return;
@@ -1001,7 +1003,7 @@ void RP(){
         c = cadenaAtomos[cuentaSintactica++];
         return;
     }else{
-        errorSint("><ledu");
+        errorSint("><ledu", "RP");
     }
     return;
 }
@@ -1010,7 +1012,7 @@ void V(){
   if( c == 'i' || c == 'n' || c == 'r' || c == 's')
     c = cadenaAtomos[cuentaSintactica++];
   else 
-    errorSint("inrs");
+    errorSint("inrs", "V");
   return; 
 }
 
@@ -1018,7 +1020,7 @@ void VP(){
   if ( c == 'n' || c == 'i')
     c = cadenaAtomos[cuentaSintactica++]; 
   else 
-    errorSint("ni"); 
+    errorSint("ni", "VP"); 
   return; 
 }
 
@@ -1026,7 +1028,7 @@ void VPP(){
   if ( c == 'r' || c == 'i' )
     c = cadenaAtomos[cuentaSintactica++]; 
   else 
-    errorSint("ri"); 
+    errorSint("ri", "VPP"); 
   return; 
 }
 
@@ -1034,7 +1036,7 @@ void VPPP(){
   if (c == 's' || c == 'i' )
     c = cadenaAtomos[cuentaSintactica++]; 
   else 
-    errorSint("si"); 
+    errorSint("si", "VPPP"); 
   return; 
 }
 
@@ -1056,7 +1058,7 @@ void P(){
   else if (c == 'c')
     c = cadenaAtomos[cuentaSintactica++];  
   else 
-    errorSint("ifhwj[zc"); 
+    errorSint("ifhwj[zc", "P"); 
   return; 
 }
 
@@ -1067,7 +1069,7 @@ void listaP(){
     P(); 
     listaP(); 
   }else 
-    errorSint("}:tqaoifhwj[zc"); 
+    errorSint("}:tqaoifhwj[zc", "listaP"); 
   return;
 }
 
@@ -1087,17 +1089,17 @@ void W(){
             if (c == '}')
               c = cadenaAtomos[cuentaSintactica++]; 
             else 
-              errorSint("}");
+              errorSint("}", "W");
           } else 
-            errorSint("{");
+            errorSint("{", "W");
         } else 
-          errorSint("m"); 
+          errorSint("m", "W"); 
       } else 
-        errorSint(")");
+        errorSint(")", "W");
     } else 
-      errorSint("(");
+      errorSint("(", "W");
   } else 
-    errorSint("w"); 
+    errorSint("w", "W"); 
   return; 
 }
 
@@ -1114,13 +1116,13 @@ void I(){
         if (c == ':')
           c = cadenaAtomos[cuentaSintactica++]; 
         else 
-          errorSint(":");  
+          errorSint(":", "I");  
       } else 
-        errorSint(")"); 
+        errorSint(")", "I"); 
     } else 
-      errorSint("("); 
+      errorSint("(", "I"); 
   } else 
-    errorSint("f"); 
+    errorSint("f", "I"); 
 
   return; 
 }
@@ -1132,7 +1134,7 @@ void IP(){
   } else if (c == ':')
     return; 
   else 
-    errorSint(":t"); 
+    errorSint(":t", "IP"); 
   return; 
 }
 
@@ -1150,13 +1152,13 @@ void J(){
         if (c == '}')
           c = cadenaAtomos[cuentaSintactica++]; 
         else 
-          errorSint("}"); 
+          errorSint("}", "J"); 
       } else  
-        errorSint("{"); 
+        errorSint("{", "J"); 
     } else 
-      errorSint("("); 
+      errorSint("(", "J"); 
   } else 
-    errorSint("j"); 
+    errorSint("j", "J"); 
   return; 
 }
 
@@ -1169,13 +1171,13 @@ void Y(){
       if (c == ')')
         c = cadenaAtomos[cuentaSintactica++]; 
       else 
-        errorSint(")"); 
+        errorSint(")", "Y"); 
     } else
-      errorSint("=");
+      errorSint("=", "Y");
   } else if (c == ';')
     c = cadenaAtomos[cuentaSintactica++]; 
   else 
-    errorSint("i;"); 
+    errorSint("i;", "Y"); 
   return; 
 }
 
@@ -1185,11 +1187,11 @@ void X(){
     if (c == ';')
       c = cadenaAtomos[cuentaSintactica++];
     else 
-      errorSint(";"); 
+      errorSint(";", "X"); 
   } else if (c == ';')
     c = cadenaAtomos[cuentaSintactica++]; 
   else 
-    errorSint("inrs;"); 
+    errorSint("inrs;", "X"); 
   return; 
 }
 
@@ -1202,13 +1204,13 @@ void Z(){
       if (c == ')')
         c = cadenaAtomos[cuentaSintactica++];
       else 
-        errorSint(")"); 
+        errorSint(")", "Z"); 
     } else 
-      errorSint("="); 
+      errorSint("=", "Z"); 
   } else if (c == ')')
     c = cadenaAtomos[cuentaSintactica++]; 
   else 
-    errorSint("i)"); 
+    errorSint("i)", "Z"); 
   return; 
 }
 
@@ -1228,17 +1230,17 @@ void H(){
             if (c == '}')
               c = cadenaAtomos[cuentaSintactica++]; 
             else 
-              errorSint("}"); 
+              errorSint("}", "H"); 
           } else 
-            errorSint("{"); 
+            errorSint("{", "H"); 
         } else 
-          errorSint(")"); 
+          errorSint(")", "H"); 
       } else 
-        errorSint("i"); 
+        errorSint("i", "H"); 
     } else 
-      errorSint("("); 
+      errorSint("(", "H"); 
   } else 
-    errorSint("h");
+    errorSint("h", "H");
   return; 
 }
 
@@ -1253,13 +1255,13 @@ void CP(){
         U(); 
         CP(); 
       } else 
-        errorSint(":"); 
+        errorSint(":", "CP"); 
     } else 
-      errorSint("n"); 
+      errorSint("n", "CP"); 
   } else if (c == 'o' || c == '}')
     return; 
   else 
-    errorSint("ao}"); 
+    errorSint("ao}", "CP"); 
   return; 
 }
 
@@ -1270,11 +1272,11 @@ void OP(){
       c = cadenaAtomos[cuentaSintactica++]; 
       listaP(); 
     } else 
-      errorSint(":"); 
+      errorSint(":", "OP"); 
   } else if (c == '}')
     return; 
   else 
-    errorSint("o}"); 
+    errorSint("o}", "OP"); 
   return; 
 }
 
@@ -1284,7 +1286,7 @@ void U(){
   else if ( c == 'a' || c == 'o' || c == '}') //+FDC
     return; 
   else 
-    errorSint("qao}"); 
+    errorSint("qao}", "U"); 
   return; 
 }
 
@@ -1295,9 +1297,9 @@ void Devuelve(){
     if (c == ';')
       c = cadenaAtomos[cuentaSintactica++]; 
     else
-      errorSint(";"); 
+      errorSint(";", "Devuelve"); 
   } else
-    errorSint("z"); 
+    errorSint("z", "Devuelve"); 
   return; 
 }
 
@@ -1307,7 +1309,7 @@ void valor(){
   else if (c == ')')
     return; 
   else 
-    errorSint("inrs)"); 
+    errorSint("inrs)", "valor"); 
   return; 
 }
 
@@ -1324,15 +1326,15 @@ void Llama(){
           if (c == ']')
             c = cadenaAtomos[cuentaSintactica++]; 
           else 
-            errorSint("]"); 
+            errorSint("]", "Llama"); 
         } else
-          errorSint(")"); 
+          errorSint(")", "Llama"); 
       } else 
-        errorSint("("); 
+        errorSint("(", "Llama"); 
     } else 
-      errorSint("i");
+      errorSint("i", "Llama");
   } else  
-    errorSint("["); 
+    errorSint("[", "Llama"); 
   return;
 }
 
@@ -1343,7 +1345,7 @@ void arg(){
     V(); 
     otroArg(); 
   } else
-    errorSint(")inrs"); 
+    errorSint(")inrs", "arg"); 
   return; 
 }
 
@@ -1355,6 +1357,6 @@ void otroArg(){
   } else if (c == ')') // +FDC
     return; 
   else 
-    errorSint(",)"); 
+    errorSint(",)", "otroArg"); 
   return;
 }
