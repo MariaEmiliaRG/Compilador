@@ -212,8 +212,8 @@ int main(int argn, char* arg[]){
       ptrCadenaAtomos=fopen("Atomos.txt", "a");
       //Inicio de identificación de los componentes léxicos.
       yylex();
-
-      c = cadenaAtomos[0];
+      cuentaSintactica = 0;
+      c = cadenaAtomos[cuentaSintactica++];
       Program(); 
       
       impCadAt();
@@ -648,9 +648,7 @@ void checkError(){
 
 void errorSint(char *errores, char * produccion){
     errorSintactico++;
-    fprintf(errorsFile, "ERROR SINTACTICO, en atomo numero %d, valor %c, se eperaba alguno de estos valores: '%s' \n", cuentaSintactica, c, errores);
-    c = cadenaAtomos[cuentaSintactica++];
-
+    fprintf(errorsFile, "ERROR SINTACTICO, en atomo numero %d, valor %c, se eperaba alguno de estos valores: '%s' \n", cuentaSintactica - 1, cadenaAtomos[cuentaSintactica - 1], errores);
     fprintf(errorsFile, "PRODUCCIÓN -> %s\n", produccion);
 }
 
@@ -754,7 +752,7 @@ void otroParam(){
 }
 
 void Cuerpo(){
-  c = cadenaAtomos[cuentaSintactica++];
+  //c = cadenaAtomos[cuentaSintactica++];
   if( c == '}' || c == 'b' || c == 'g' || c == '#' || c == 'y' || c == 'x' || c == 'i' || c == 'f' || c == 'h' || c == 'w' || c == 'j' || c == '['|| c == 'z'|| c == 'c'){
     Decl();
     listaP();
