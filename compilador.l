@@ -237,14 +237,14 @@ int main(int argn, char* arg[]){
 
 void inicializarCadAtomos(){
   for(int i = 0; i < 2048; i++){
-    cadenaAtomos[i] = '_';
+    cadenaAtomos[i] = '&';
   }
 }
 
 void inicializarCad(){
   int i = 0;
   for(i = 0; i < 2048; i++){
-    cadenaAtomos[i] = '_';
+    cadenaAtomos[i] = '&';
   }
 }
 
@@ -258,7 +258,7 @@ void impCadAt(){
     if(i % 10 == 0){
       printf("\n");
     }
-    if(cadenaAtomos[i] == '_'){
+    if(cadenaAtomos[i] == '&'){
       printf("\n");
       return;
     }
@@ -662,16 +662,16 @@ void Program(){
         return;
     }
 }
-//_ no se ocupa, se usará como fin de cadena
+//& no se ocupa, se usará como fin de cadena
 void otraFunc(){
   if(c == 'b' || c == 'g' || c == '#' || c == 'y' || c == 'x'){
     Func();
     otraFunc();
     return;
-  }else if(c == '_'){
+  }else if(c == '&'){
     return;
   }else{
-    errorSint("bg#yx_", "otraFunc");
+    errorSint("bg#yx&", "otraFunc");
     return;
   }
 }
