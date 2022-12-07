@@ -83,6 +83,7 @@ int catRelacionales(char *name);
 void imprimirArchivos();
 
 //Funciones del analizador sintáctico.
+void inicializarCadAtomos();
 void inicializarCad();
 void impCadAt(); 
 void Program(); 
@@ -125,7 +126,7 @@ void CP();
 void OP(); 
 void U(); 
 void Devuelve(); 
-void Valor(); 
+void valor(); 
 void Llama(); 
 void arg(); 
 void otroArg(); 
@@ -181,7 +182,7 @@ nextLine   \n
 int main(int argn, char* arg[]){
 
   inicializarCad();
-  
+  inicializarCadAtomos();
   errorsFile = fopen("errors.txt", "w");
 
   //Comprobar que el usuario halla introducido el archivo a ser compilado. 
@@ -201,27 +202,27 @@ int main(int argn, char* arg[]){
       fclose(ptrLiteralesCad);
       ptrTokens=fopen("Tokens.txt", "w");
       fclose(ptrTokens);
-
+      ptrCadenaAtomos=fopen("Atomos.txt", "w");
+      fclose(ptrCadenaAtomos);
       //Asignando apuntadores y abriendo archivos
       ptrSimbolos=fopen("TablaSimbolos.txt", "a");
       ptrLiteralesCad=fopen("TLiteralesCadenas.txt", "a");
       ptrReales=fopen("TLiteralesReales.txt", "a");
       ptrTokens=fopen("Tokens.txt", "a");
-      
+      ptrCadenaAtomos=fopen("Atomos.txt", "a");
       //Inicio de identificación de los componentes léxicos.
       yylex();
 
-      impCadAt();
-
-      c = cadenaAtomos[cuentaSintactica++];
+      c = cadenaAtomos[0];
       Program(); 
-
+      
+      impCadAt();
       //Cerrando archivos
       fclose(ptrSimbolos);
       fclose(ptrLiteralesCad);
       fclose(ptrTokens);
       fclose(ptrReales);
-
+      fclose(ptrCadenaAtomos);
       //Imprimiendo archivos
       imprimirArchivos();
       
@@ -234,24 +235,35 @@ int main(int argn, char* arg[]){
   return 0; 
 }
 
+void inicializarCadAtomos(){
+  for(int i = 0; i < 2048; i++){
+    cadenaAtomos[i] = '_';
+  }
+}
+
 void inicializarCad(){
   int i = 0;
   for(i = 0; i < 2048; i++){
-    cadenaAtomos[i] = '-';
+    cadenaAtomos[i] = '_';
   }
 }
 
 void impCadAt(){
   int i = 0;
+  printf("Cadena de atomos\n");
+  fprintf(ptrCadenaAtomos,"Cadena de atomos\n");
   for(i = 0; i < 2048; i++){
     printf("%c ", cadenaAtomos[i]);
+    fprintf(ptrCadenaAtomos,"%c", cadenaAtomos[i]);
     if(i % 10 == 0){
       printf("\n");
     }
-    if(cadenaAtomos[i] == '-'){
+    if(cadenaAtomos[i] == '_'){
+      printf("\n");
       return;
     }
   }
+  printf("\n");
 }
 
 //Funcion que sirve para agregar nodos a la lista de simbolos
@@ -309,34 +321,34 @@ int buscarElemento(char *name){
 int catRelacionales(char *operador){
   if(strcmp(operador, "<") == 0){
     cadenaAtomos[cuentaAtomos]='<';
-	cuentaAtomos++;
+	  cuentaAtomos++;
     return 0;
   }else if(strcmp(operador, ">") == 0){
     cadenaAtomos[cuentaAtomos]='>';
-	cuentaAtomos++;
+	  cuentaAtomos++;
     return 1;
   }else if(strcmp(operador, "<=") == 0){
     cadenaAtomos[cuentaAtomos]='l';
-	cuentaAtomos++;
+	  cuentaAtomos++;
     return 2;
   }else if(strcmp(operador, ">=") == 0){
     cadenaAtomos[cuentaAtomos]='u';
-	cuentaAtomos++;
+	  cuentaAtomos++;
     return 3;
   }else if(strcmp(operador, "==") == 0){
     cadenaAtomos[cuentaAtomos]='e';
-	cuentaAtomos++;
+	  cuentaAtomos++;
     return 4;
   }else if(strcmp(operador, "!=") == 0){
     cadenaAtomos[cuentaAtomos]='d';
-	cuentaAtomos++;
+	  cuentaAtomos++;
     return 5;
   }else{
     return -1;
   }
 }
 
-//Imprimit archivos
+//Imprimir archivos
 
 
 /*
@@ -388,7 +400,7 @@ void newSpecial(char *text){
         cuentaAtomos++;
     break;
     case ']':
-        cadenaAtomos[cuentaAtomos]='f';
+        cadenaAtomos[cuentaAtomos]=']';
         cuentaAtomos++;
     break;
     case '(':
@@ -408,15 +420,15 @@ void newSpecial(char *text){
         cuentaAtomos++;
     break;
     case ',':
-        cadenaAtomos[cuentaAtomos]='f';
+        cadenaAtomos[cuentaAtomos]=',';
         cuentaAtomos++;
     break;
     case ':':
-        cadenaAtomos[cuentaAtomos]='f';
+        cadenaAtomos[cuentaAtomos]=':';
         cuentaAtomos++;
     break;
     case ';':
-        cadenaAtomos[cuentaAtomos]='f';
+        cadenaAtomos[cuentaAtomos]=';';
         cuentaAtomos++;
     break;
   }
@@ -658,10 +670,10 @@ void otraFunc(){
     Func();
     otraFunc();
     return;
-  }else if(c == '-'){
+  }else if(c == '_'){
     return;
   }else{
-    errorSint("bg#yx-", "otraFunc");
+    errorSint("bg#yx_", "otraFunc");
     return;
   }
 }
@@ -934,14 +946,14 @@ void T(){
 
 
 void TP(){
-    if(c=='*'||c=='/'||c=='\\'||c=='%'||c=='^'){
+    if(c == '*'|| c == '/'||c == '\\'||c == '%'||c == '^'){
         c = cadenaAtomos[cuentaSintactica++];
         F();
         TP();
-    }else if(c==';'||c==')'||c=='+'||c=='-'){
+    }else if(c == ';'|| c == ')'|| c == '+'||c == '-'){
         return;
     }else{
-      errorSint("%%*/\\^;)+-", "TP");
+      errorSint("%*/\\^;)+-", "TP");
     }
 }
 
@@ -960,11 +972,11 @@ void F(){
   }else if(c=='i'||c=='n'||c=='r'){
     c = cadenaAtomos[cuentaSintactica++];
     return;
-  }else if(c=='['){
+  }else if(c == '['){
     Llama();
     return;
   }else{
-    errorSint("(inr", "F");
+    errorSint("(inr[(", "F");
   }
   return;
 }
@@ -998,7 +1010,6 @@ void R(){
 }
 
 void RP(){
-    c = cadenaAtomos[cuentaSintactica++];
     if(c=='>'||c=='<'||c=='l'||c=='e'||c=='d'||c=='u'){
         c = cadenaAtomos[cuentaSintactica++];
         return;
@@ -1055,9 +1066,14 @@ void P(){
     Llama(); 
   else if (c == 'z')
     Devuelve();
-  else if (c == 'c')
+  else if (c == 'c'){
     c = cadenaAtomos[cuentaSintactica++];  
-  else 
+    if(c == ';'){
+      c = cadenaAtomos[cuentaSintactica++];  
+    }else{
+      errorSint(";","P");    
+    }
+  }else 
     errorSint("ifhwj[zc", "P"); 
   return; 
 }
@@ -1168,10 +1184,10 @@ void Y(){
     if (c == '='){
       c = cadenaAtomos[cuentaSintactica++]; 
       E(); 
-      if (c == ')')
+      if (c == ';')
         c = cadenaAtomos[cuentaSintactica++]; 
       else 
-        errorSint(")", "Y"); 
+        errorSint(";", "Y"); 
     } else
       errorSint("=", "Y");
   } else if (c == ';')
@@ -1292,12 +1308,20 @@ void U(){
 
 void Devuelve(){
   if ( c == 'z'){
-    c = cadenaAtomos[cuentaSintactica++]; 
-    Devuelve(); 
-    if (c == ';')
-      c = cadenaAtomos[cuentaSintactica++]; 
-    else
-      errorSint(";", "Devuelve"); 
+    c = cadenaAtomos[cuentaSintactica++];
+    if (c == '('){
+      c = cadenaAtomos[cuentaSintactica++];
+      valor();
+      if (c == ')'){
+        c = cadenaAtomos[cuentaSintactica++];
+        if (c == ';')
+          c = cadenaAtomos[cuentaSintactica++];
+        else 
+          errorSint(";", "Devuelve");
+      } else 
+        errorSint(")", "Devuelve");
+    } else
+      errorSint("(", "Devuelve");
   } else
     errorSint("z", "Devuelve"); 
   return; 
