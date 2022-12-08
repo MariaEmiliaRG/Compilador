@@ -230,8 +230,13 @@ int main(int argn, char* arg[]){
       fprintf(errorsFile, "ERROR, no se encontró el archivo a compilar."); 
     }
   }
-
+	
   fclose(errorsFile);
+  if(errorSintactico == 0){
+    printf("\nNo se presentaron errores sintacticos\n");
+  }else{
+    printf("\nSe presentaron %d errores sintacticos", errorSintactico);
+  }
   return 0; 
 }
 
