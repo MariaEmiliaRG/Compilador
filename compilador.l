@@ -65,6 +65,8 @@ int cuentaSintactica=0;
 int errorSintactico = 0;
 char c;
 
+// comentario
+
 void newIdent(char *text);
 void nexConstCad(char *text);
 void newSpecial(char *text);
